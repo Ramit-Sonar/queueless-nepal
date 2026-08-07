@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if mode == 'create' %}Add Staff{% else %}Edit Staff{% endif %} — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* staff_form.html — page-specific liquid-glass polish */
+    .card {
+        animation: sf-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .form-group, .form-row {
+        animation: sf-fade-up 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes sf-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sf-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{% if mode == 'create' %}Add Staff{% else %}Edit Staff{% endif %}</h1>
+
+<div class="card" style="max-width: 560px;">
+    {% if mode == 'create' %}
+        {% if form.non_field_errors %}
+            <ul class="form-error-list">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.first_name.id_for_label }}">First name</label>
+                    {{ form.first_name|add_class:"form-control" }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.last_name.id_for_label }}">Last name</label>
+                    {{ form.last_name|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username|add_class:"form-control" }}
+                {% for error in form.username.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email|add_class:"form-control" }}
+                {% for error in form.email.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone number</label>
+                {{ form.phone_number|add_class:"form-control" }}
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.department.id_for_label }}">Department</label>
+                    {{ form.department|add_class:"form-control" }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.counter_number.id_for_label }}">Counter</label>
+                    {{ form.counter_number|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.service.id_for_label }}">Assigned service <span style="font-weight:400; color: var(--color-text-secondary);">(optional)</span></label>
+                {{ form.service|add_class:"form-control" }}
+                <div class="form-help">If set, this staff member can only book walk-in tokens for this one service/counter.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.employee_id.id_for_label }}">Employee ID <span style="font-weight:400; color: var(--color-text-secondary);">(optional)</span></label>
+                {{ form.employee_id|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.password1.id_for_label }}">Temporary password</label>
+                {{ form.password1|add_class:"form-control" }}
+                {% for error in form.password1.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.password2.id_for_label }}">Confirm password</label>
+                {{ form.password2|add_class:"form-control" }}
+                {% for error in form.password2.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-help" style="margin-bottom: var(--space-4);">Share this password with the staff member — they can change it after logging in.</div>
+            <div class="form-row">
+                <a href="{% url 'organizations:staff_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Add Staff</button>
+            </div>
+        </form>
+    {% else %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ user_form.first_name.id_for_label }}">First name</label>
+                    {{ user_form.first_name|add_class:"form-control" }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ user_form.last_name.id_for_label }}">Last name</label>
+                    {{ user_form.last_name|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ user_form.email.id_for_label }}">Email</label>
+                {{ user_form.email|add_class:"form-control" }}
+                {% for error in user_form.email.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ user_form.phone_number.id_for_label }}">Phone number</label>
+                {{ user_form.phone_number|add_class:"form-control" }}
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ profile_form.department.id_for_label }}">Department</label>
+                    {{ profile_form.department|add_class:"form-control" }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ profile_form.counter_number.id_for_label }}">Counter</label>
+                    {{ profile_form.counter_number|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ profile_form.service.id_for_label }}">Assigned service <span style="font-weight:400; color: var(--color-text-secondary);">(optional)</span></label>
+                {{ profile_form.service|add_class:"form-control" }}
+                <div class="form-help">If set, this staff member can only book walk-in tokens for this one service/counter.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ profile_form.employee_id.id_for_label }}">Employee ID</label>
+                {{ profile_form.employee_id|add_class:"form-control" }}
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap: var(--space-3);">
+                {{ profile_form.is_active }}
+                <label class="form-label" style="margin:0;" for="{{ profile_form.is_active.id_for_label }}">Active (can log in)</label>
+            </div>
+            <div class="form-row">
+                <a href="{% url 'organizations:staff_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

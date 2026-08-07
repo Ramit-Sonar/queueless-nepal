@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}{{ organization.name }} — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* select_service.html — premium redesign, matching select_organization.html's visual system */
+
+    .svc-page-bg { position: relative; }
+
+    .svc-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.5;
+        pointer-events: none;
+        z-index: -1;
+        animation: svcBlobFloat 12s ease-in-out infinite;
+    }
+
+    .svc-blob-1 { width: 300px; height: 300px; top: -80px; right: -60px; background: radial-gradient(circle, rgba(96,165,250,0.26), transparent 70%); }
+    .svc-blob-2 { width: 240px; height: 240px; top: 220px; left: -100px; background: radial-gradient(circle, rgba(37,99,235,0.12), transparent 70%); animation-delay: -5s; }
+
+    @keyframes svcBlobFloat {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        50% { transform: translate(14px, -12px) scale(1.05); }
+    }
+
+    .svc-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 0.86rem;
+        font-weight: 600;
+        margin-bottom: var(--space-4);
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .svc-back-link i { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+    .svc-back-link:hover { color: var(--color-primary); }
+    .svc-back-link:hover i { transform: translateX(-3px); }
+
+    /* ---------- Org hero ---------- */
+    .svc-org-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(160deg, #ffffff 0%, var(--color-background) 60%, #EFF6FF 140%);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: var(--space-5);
+        animation: svcFadeUp 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .svc-org-top {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 18px;
+    }
+
+    .svc-org-logo {
+        width: 72px; height: 72px;
+        border-radius: 20px;
+        background: rgba(37,99,235,0.1);
+        color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px;
+        flex-shrink: 0;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .svc-org-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+    .svc-org-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+    .svc-org-name { font-family: var(--font-heading); font-weight: 700; font-size: clamp(20px, 2.6vw, 26px); }
+
+    .svc-verified-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+        color: var(--color-primary);
+        background: rgba(37,99,235,0.1);
+        padding: 3px 9px;
+        border-radius: var(--radius-full);
+    }
+
+    .svc-status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 11px;
+        border-radius: var(--radius-full);
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+
+    .svc-status-open { background: rgba(34,197,94,0.14); color: #15803d; }
+    .svc-status-open i { animation: svcPulse 1.6s ease-in-out infinite; }
+    .svc-status-closed { background: rgba(100,116,139,0.14); color: #475569; }
+
+    @keyframes svcPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    .svc-org-meta { color: var(--color-text-secondary); font-size: 14px; margin-bottom: 10px; }
+    .svc-org-desc { color: var(--color-text-secondary); font-size: 14px; max-width: 640px; margin-bottom: 14px; }
+
+    .svc-contact-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-size: 13px;
+        color: var(--color-text-secondary);
+    }
+
+    .svc-contact-row span { display: inline-flex; align-items: center; gap: 6px; }
+    .svc-contact-row i { color: var(--color-primary); }
+
+    .svc-stat-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .svc-stat-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: var(--radius-full);
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+        font-size: 12.5px;
+    }
+
+    .svc-stat-chip strong { font-family: var(--font-heading); font-weight: 700; color: var(--color-primary-dark); }
+
+    .svc-section-heading {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: var(--space-3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* ---------- Service cards ---------- */
+    .svc-card {
+        position: relative;
+        background: var(--color-card);
+        border: 1px solid var(--color-border);
+        border-left: 3px solid var(--color-primary);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 14px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1);
+        animation: svcFadeUp 0.4s cubic-bezier(0.4,0,0.2,1) both;
+    }
+
+    .svc-card:nth-child(1) { animation-delay: 0.03s; }
+    .svc-card:nth-child(2) { animation-delay: 0.07s; }
+    .svc-card:nth-child(3) { animation-delay: 0.11s; }
+    .svc-card:nth-child(4) { animation-delay: 0.15s; }
+    .svc-card:nth-child(5) { animation-delay: 0.19s; }
+    .svc-card:nth-child(6) { animation-delay: 0.23s; }
+
+    .svc-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(37,99,235,0.05), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.35s ease;
+        pointer-events: none;
+    }
+
+    .svc-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .svc-card:hover::before { opacity: 1; }
+
+    .svc-card-inner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
+    }
+
+    .svc-card-icon {
+        width: 52px; height: 52px;
+        border-radius: 16px;
+        background: rgba(37,99,235,0.1);
+        color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+        transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .svc-card:hover .svc-card-icon { transform: scale(1.08) rotate(-3deg); }
+
+    .svc-card-body { flex: 1; min-width: 220px; }
+    .svc-card-name { font-family: var(--font-heading); font-weight: 700; font-size: 16.5px; margin-bottom: 3px; }
+    .svc-card-meta { font-size: 12.5px; color: var(--color-text-secondary); margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .svc-card-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .svc-card-desc { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px; }
+
+    .svc-live-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .svc-mini-stat {
+        display: flex; align-items: center; gap: 6px;
+        padding: 5px 11px;
+        border-radius: var(--radius-md);
+        background: var(--color-background);
+        font-size: 11.5px;
+        color: var(--color-text-secondary);
+    }
+
+    .svc-mini-stat strong { color: var(--color-text-primary); font-weight: 700; }
+
+    .svc-card-action { flex-shrink: 0; margin-left: auto; }
+
+    .svc-card-action .btn {
+        transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s ease;
+    }
+
+    .svc-card-action .btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: var(--shadow-md); }
+
+    @keyframes svcFadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Empty state ---------- */
+    .svc-empty {
+        text-align: center;
+        padding: 56px 24px;
+        background: var(--color-card);
+        border: 1px dashed var(--color-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .svc-empty .empty-icon {
+        width: 84px; height: 84px;
+        border-radius: 50%;
+        background: rgba(37,99,235,0.08);
+        color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 32px;
+        margin: 0 auto 18px;
+        animation: svcFloatIcon 3.5s ease-in-out infinite;
+    }
+
+    @keyframes svcFloatIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    @media (max-width: 640px) {
+        .svc-org-top { flex-direction: column; align-items: flex-start; }
+        .svc-card-inner { flex-direction: column; align-items: flex-start; }
+        .svc-card-action { width: 100%; margin-left: 0; }
+        .svc-card-action form, .svc-card-action .btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .svc-card, .svc-blob { animation: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="svc-page-bg">
+    <div class="svc-blob svc-blob-1"></div>
+    <div class="svc-blob svc-blob-2"></div>
+
+    <a href="{% url 'customers:select_organization' %}" class="svc-back-link">
+        <i class="fa-solid fa-arrow-left"></i> Back to Organizations
+    </a>
+
+    <!-- ============ ORG HERO ============ -->
+    <section class="svc-org-hero">
+        <div class="svc-org-top">
+            <div class="svc-org-logo">
+                {% if organization.logo %}
+                    <img src="{{ organization.logo.url }}" alt="{{ organization.name }}">
+                {% else %}
+                    {% if organization.category == 'hospital' %}<i class="fa-solid fa-hospital"></i>
+                    {% elif organization.category == 'bank' %}<i class="fa-solid fa-building-columns"></i>
+                    {% elif organization.category == 'government' %}<i class="fa-solid fa-landmark"></i>
+                    {% elif organization.category == 'education' %}<i class="fa-solid fa-graduation-cap"></i>
+                    {% elif organization.category == 'retail' %}<i class="fa-solid fa-store"></i>
+                    {% else %}<i class="fa-solid fa-building"></i>{% endif %}
+                {% endif %}
+            </div>
+            <div style="flex:1; min-width:200px;">
+                <div class="svc-org-title-row">
+                    <span class="svc-org-name">{{ organization.name }}</span>
+                    <span class="svc-verified-badge"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                    {% if is_open %}
+                        <span class="svc-status-badge svc-status-open"><i class="fa-solid fa-circle"></i> Open Now</span>
+                    {% else %}
+                        <span class="svc-status-badge svc-status-closed"><i class="fa-solid fa-circle"></i> Closed</span>
+                    {% endif %}
+                </div>
+                <div class="svc-org-meta">
+                    {{ organization.get_category_display }}{% if organization.city %} · {{ organization.city }}{% endif %}
+                </div>
+                {% if organization.description %}
+                    <p class="svc-org-desc">{{ organization.description }}</p>
+                {% endif %}
+                <div class="svc-contact-row">
+                    {% if organization.address %}<span><i class="fa-solid fa-location-dot"></i> {{ organization.address }}</span>{% endif %}
+                    {% if organization.phone_number %}<span><i class="fa-solid fa-phone"></i> {{ organization.phone_number }}</span>{% endif %}
+                    {% if organization.opening_time and organization.closing_time %}
+                        <span><i class="fa-regular fa-clock"></i> {{ organization.opening_time|time:"g:i A" }} – {{ organization.closing_time|time:"g:i A" }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="svc-stat-row">
+            <span class="svc-stat-chip"><i class="fa-solid fa-list-check" style="color:var(--color-primary);"></i> <strong>{{ services|length }}</strong> Services</span>
+            <span class="svc-stat-chip"><i class="fa-solid fa-people-line" style="color:var(--color-primary);"></i> <strong>{{ total_waiting }}</strong> Waiting Now</span>
+            <span class="svc-stat-chip"><i class="fa-solid fa-circle-check" style="color:var(--color-success);"></i> <strong>{{ open_services_count }}</strong> Queues Open</span>
+        </div>
+    </section>
+
+    <!-- ============ SERVICES ============ -->
+    <h2 class="svc-section-heading"><i class="fa-solid fa-list-check" style="color:var(--color-primary);"></i> Select a Service</h2>
+
+    {% if services %}
+        {% for service in services %}
+            <div class="svc-card">
+                <div class="svc-card-inner">
+                    <div class="svc-card-icon"><i class="fa-solid fa-list-check"></i></div>
+                    <div class="svc-card-body">
+                        <div class="svc-card-name">{{ service.name }}</div>
+                        <div class="svc-card-meta">
+                            {% if service.department %}<span><i class="fa-solid fa-sitemap"></i> {{ service.department.name }}</span>{% endif %}
+                            <span><i class="fa-regular fa-clock"></i> ~{{ service.average_service_minutes }} min per person</span>
+                        </div>
+                        {% if service.description %}
+                            <div class="svc-card-desc">{{ service.description }}</div>
+                        {% endif %}
+                        <div class="svc-live-row">
+                            {% if service.is_queue_open %}
+                                <span class="svc-status-badge svc-status-open"><i class="fa-solid fa-circle"></i> Queue Open</span>
+                                <span class="svc-mini-stat"><i class="fa-solid fa-ticket" style="color:var(--color-primary);"></i> Now serving <strong>{{ service.currently_serving_number|default:"—" }}</strong></span>
+                                <span class="svc-mini-stat"><i class="fa-solid fa-people-line" style="color:var(--color-primary);"></i> <strong>{{ service.waiting_count }}</strong> waiting</span>
+                            {% else %}
+                                <span class="svc-status-badge svc-status-closed"><i class="fa-solid fa-circle"></i> Not Open Yet</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="svc-card-action">
+                        {% if user.is_authenticated and user.role == 'customer' %}
+                            <form method="post" action="{% url 'customers:book_token' service_id=service.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-ticket"></i> Book Token</button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Login to Book</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="svc-empty">
+            <div class="empty-icon"><i class="fa-solid fa-list-check"></i></div>
+            <h2 style="font-size:1.1rem; margin-bottom:6px;">No services available</h2>
+            <p style="color:var(--color-text-secondary); font-size:0.9rem; margin-bottom:20px;">
+                {{ organization.name }} hasn't set up any active services yet. Check back later.
+            </p>
+            <a href="{% url 'customers:select_organization' %}" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> Browse Other Organizations</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

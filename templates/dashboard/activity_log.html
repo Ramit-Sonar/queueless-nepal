@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* activity_log.html — page-specific liquid-glass polish */
+    .chip {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+    }
+
+    .chip.is-active {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .table-wrap {
+        animation: al-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    @keyframes al-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Activity Log</h1>
+
+<div class="chip-row">
+    <a href="?action=" class="chip {% if not selected_action %}is-active{% endif %}">All</a>
+    {% for value, label in action_choices %}
+        <a href="?action={{ value }}" class="chip {% if selected_action == value %}is-active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+{% if logs %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Action</th><th>Description</th><th>By</th><th>IP</th><th>When</th></tr></thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td>{{ log.get_action_display }}</td>
+                        <td>{{ log.description }}</td>
+                        <td>{{ log.actor|default:"System" }}</td>
+                        <td>{{ log.ip_address|default:"—" }}</td>
+                        <td>{{ log.created_at|date:"M j, Y g:i A" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+        <div style="display:flex; justify-content:center; gap: var(--space-3); margin-top: var(--space-4);">
+            {% if page_obj.has_previous %}<a href="?action={{ selected_action }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?action={{ selected_action }}&page={{ page_obj.next_page_number }}" class="btn btn-outline">Next</a>{% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-clock-rotate-left"></i><p>No activity recorded yet.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Open a Queue — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* queue_form.html — page-specific liquid-glass polish */
+    .card {
+        animation: qf-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .form-group {
+        animation: qf-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.06s both;
+    }
+
+    @keyframes qf-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes qf-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Open a Queue</h1>
+
+<div class="card" style="max-width: 480px;">
+    <p style="color: var(--color-text-secondary); font-size:0.88rem; margin-bottom: var(--space-4);">
+        Opens today's queue for the selected service so customers can start booking tokens.
+    </p>
+    {% if form.non_field_errors %}
+        <ul class="form-error-list">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label" for="{{ form.service.id_for_label }}">Service</label>
+            {{ form.service|add_class:"form-control" }}
+            {% for error in form.service.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-row">
+            <a href="{% url 'organizations:queues' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Open Queue</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

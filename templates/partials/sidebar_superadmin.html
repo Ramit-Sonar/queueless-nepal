@@ -1,0 +1,98 @@
+{% load static %}
+<style>
+    /* sidebar_superadmin.html — internal liquid-glass polish */
+    aside.app-sidebar {
+        animation: sbsa-fade-right 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    aside.app-sidebar .app-header__brand img.brand-logo {
+        transition: transform 0.3s ease;
+    }
+
+    aside.app-sidebar .app-header__brand:hover img.brand-logo {
+        transform: scale(1.08) rotate(-4deg);
+    }
+
+    aside.app-sidebar .app-sidebar__link {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: sbsa-fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    aside.app-sidebar nav > a:nth-child(1) { animation-delay: 0.03s; }
+    aside.app-sidebar nav > a:nth-child(2) { animation-delay: 0.06s; }
+    aside.app-sidebar nav > a:nth-child(3) { animation-delay: 0.09s; }
+    aside.app-sidebar nav > a:nth-child(4) { animation-delay: 0.12s; }
+    aside.app-sidebar nav > a:nth-child(5) { animation-delay: 0.15s; }
+    aside.app-sidebar nav > a:nth-child(6) { animation-delay: 0.18s; }
+    aside.app-sidebar nav > a:nth-child(7) { animation-delay: 0.21s; }
+    aside.app-sidebar nav > a:nth-child(8) { animation-delay: 0.24s; }
+    aside.app-sidebar nav > a:nth-child(9) { animation-delay: 0.27s; }
+
+    aside.app-sidebar .app-sidebar__link:hover {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--color-primary);
+        transform: translateX(4px);
+    }
+
+    aside.app-sidebar .app-sidebar__link.is-active {
+        box-shadow: inset 3px 0 0 var(--color-primary);
+    }
+
+    @keyframes sbsa-fade-right {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes sbsa-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        aside.app-sidebar, aside.app-sidebar .app-sidebar__link { animation: none; }
+    }
+</style>
+<aside class="app-sidebar">
+    <div class="app-header__brand" style="margin-bottom: var(--space-5); padding-left: var(--space-4);">
+        <img src="{% static 'img/logo.png' %}" alt="QueueLess Nepal" class="brand-logo">
+        <span>Super Admin</span>
+    </div>
+    <nav>
+        <a href="{% url 'dashboard:platform_dashboard' %}" class="app-sidebar__link {% if request.resolver_match.url_name == 'platform_dashboard' %}is-active{% endif %}">
+            <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a href="{% url 'dashboard:organizations' %}" class="app-sidebar__link {% if 'organization' in request.resolver_match.url_name %}is-active{% endif %}">
+            <i class="fa-solid fa-building"></i> Organizations
+        </a>
+        <a href="{% url 'dashboard:users' %}" class="app-sidebar__link {% if 'user' in request.resolver_match.url_name %}is-active{% endif %}">
+            <i class="fa-solid fa-users"></i> Users
+        </a>
+        <a href="{% url 'dashboard:subscriptions' %}" class="app-sidebar__link {% if 'subscription' in request.resolver_match.url_name or 'plan' in request.resolver_match.url_name %}is-active{% endif %}">
+            <i class="fa-solid fa-file-invoice"></i> Subscriptions
+        </a>
+        <a href="{% url 'dashboard:payments' %}" class="app-sidebar__link {% if 'payment' in request.resolver_match.url_name or 'revenue' in request.resolver_match.url_name %}is-active{% endif %}">
+            <i class="fa-solid fa-sack-dollar"></i> Payments
+        </a>
+        <a href="{% url 'dashboard:analytics' %}" class="app-sidebar__link {% if request.resolver_match.url_name == 'analytics' %}is-active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i> Analytics
+        </a>
+        <a href="{% url 'dashboard:activity_log' %}" class="app-sidebar__link {% if request.resolver_match.url_name == 'activity_log' %}is-active{% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i> Activity Log
+        </a>
+        <a href="{% url 'dashboard:announcement' %}" class="app-sidebar__link {% if request.resolver_match.url_name == 'announcement' %}is-active{% endif %}">
+            <i class="fa-solid fa-bullhorn"></i> Announcement
+        </a>
+        <a href="{% url 'dashboard:system_settings' %}" class="app-sidebar__link {% if request.resolver_match.url_name == 'system_settings' %}is-active{% endif %}">
+            <i class="fa-solid fa-gear"></i> System Settings
+        </a>
+        <a href="{% url 'accounts:profile' %}" class="app-sidebar__link {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}">
+            <i class="fa-solid fa-user"></i> Profile
+        </a>
+        <form method="post" action="{% url 'accounts:logout' %}" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+            {% csrf_token %}
+            <button type="submit" class="app-sidebar__link" style="width:100%; text-align:left; background:none; border:none; cursor:pointer; font-size:1rem; color: var(--color-danger);">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+    </nav>
+</aside>

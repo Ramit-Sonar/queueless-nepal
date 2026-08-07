@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Book a Token — Staff{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* staff/book_token.html — page-specific liquid-glass polish */
+    .card {
+        animation: bt-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .form-group, .form-row {
+        animation: bt-fade-up 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .bt-locked-service {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(56, 189, 248, 0.1));
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        margin-bottom: var(--space-4);
+    }
+
+    .bt-locked-service i {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-full);
+        background: var(--color-primary);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .bt-locked-service strong {
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .bt-locked-service span {
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+    }
+
+    @keyframes bt-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bt-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Book a Token</h1>
+
+<div class="card" style="max-width: 560px;">
+    {% if form.non_field_errors %}
+        <ul class="form-error-list">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if locked_service %}
+            <div class="bt-locked-service">
+                <i class="fa-solid fa-list-check"></i>
+                <div>
+                    <strong>{{ locked_service.name }}</strong>
+                    <span>You can only book tokens for your assigned service.</span>
+                </div>
+            </div>
+            {{ form.service }}
+        {% else %}
+            <div class="form-group">
+                <label class="form-label" for="{{ form.service.id_for_label }}">Service</label>
+                {{ form.service|add_class:"form-control" }}
+                {% for error in form.service.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.phone_number.id_for_label }}">Customer phone number</label>
+            {{ form.phone_number|add_class:"form-control" }}
+            {% for error in form.phone_number.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.first_name.id_for_label }}">Customer's first name</label>
+                {{ form.first_name|add_class:"form-control" }}
+                {% for error in form.first_name.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.last_name.id_for_label }}">Customer's last name</label>
+                {{ form.last_name|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-help" style="margin-bottom: var(--space-4);">
+            Already has an account? Just enter their phone number — name fields are only needed for new customers.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-ticket"></i> Book Token</button>
+    </form>
+</div>
+{% endblock %}

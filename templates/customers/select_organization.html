@@ -1,0 +1,898 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Select Organization — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* select_organization.html — premium redesign, internal liquid-glass polish */
+
+    .org-page-bg {
+        position: relative;
+    }
+
+    .org-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.5;
+        pointer-events: none;
+        z-index: -1;
+        animation: orgBlobFloat 12s ease-in-out infinite;
+    }
+
+    .org-blob-1 { width: 320px; height: 320px; top: -80px; right: -80px; background: radial-gradient(circle, rgba(96,165,250,0.28), transparent 70%); }
+    .org-blob-2 { width: 260px; height: 260px; top: 180px; left: -100px; background: radial-gradient(circle, rgba(37,99,235,0.14), transparent 70%); animation-delay: -5s; }
+
+    @keyframes orgBlobFloat {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        50% { transform: translate(16px, -14px) scale(1.06); }
+    }
+
+    /* ---------- Hero ---------- */
+    .org-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(160deg, #ffffff 0%, var(--color-background) 60%, #EFF6FF 140%);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 40px 36px;
+        margin-bottom: var(--space-5);
+        animation: orgFadeUp 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .org-hero-grid {
+        display: grid;
+        grid-template-columns: 1.3fr 0.9fr;
+        gap: 32px;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .org-hero h1 {
+        font-size: clamp(26px, 3.4vw, 38px);
+        font-weight: 700;
+        line-height: 1.15;
+        margin-bottom: 12px;
+        background: linear-gradient(120deg, var(--color-text-primary), var(--color-primary-dark));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .org-hero p.subtitle {
+        color: var(--color-text-secondary);
+        font-size: 15.5px;
+        max-width: 480px;
+        margin-bottom: 20px;
+    }
+
+    .org-stat-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .org-stat-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: var(--radius-full);
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+        font-size: 12.5px;
+    }
+
+    .org-stat-chip strong {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        color: var(--color-primary-dark);
+    }
+
+    .org-hero-illustration {
+        position: relative;
+        height: 200px;
+    }
+
+    .org-illo-center {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 150px;
+        background: rgba(255,255,255,0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        padding: 16px;
+        text-align: center;
+        animation: orgIlloFloat 4.5s ease-in-out infinite;
+    }
+
+    @keyframes orgIlloFloat {
+        0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+        50% { transform: translate(-50%, -50%) translateY(-8px); }
+    }
+
+    .org-illo-center i { font-size: 22px; color: var(--color-primary); margin-bottom: 6px; }
+    .org-illo-center .il-num { font-family: var(--font-heading); font-weight: 800; font-size: 20px; color: var(--color-primary); }
+    .org-illo-center .il-label { font-size: 10.5px; color: var(--color-text-secondary); }
+
+    .org-illo-chip {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 11px;
+        border-radius: var(--radius-full);
+        background: var(--color-card);
+        box-shadow: var(--shadow-sm);
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        animation: orgIlloFloat 5.5s ease-in-out infinite;
+    }
+
+    .org-illo-chip i { color: var(--color-primary); }
+    .chip-a { top: 4%; left: 0%; animation-delay: -1s; }
+    .chip-b { top: 14%; right: -2%; animation-delay: -2.5s; }
+    .chip-c { bottom: 10%; left: -4%; animation-delay: -3.5s; }
+    .chip-d { bottom: 2%; right: 4%; animation-delay: -0.5s; }
+
+    /* ---------- Search ---------- */
+    .org-search-wrap {
+        position: relative;
+        margin-bottom: var(--space-4);
+    }
+
+    .org-search-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--color-card);
+        border: 1.5px solid var(--color-border);
+        border-radius: 20px;
+        padding: 16px 20px;
+        box-shadow: var(--shadow-sm);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .org-search-bar:focus-within {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.12), var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    .org-search-bar i.fa-magnifying-glass { color: var(--color-text-secondary); font-size: 16px; flex-shrink: 0; }
+    .org-search-bar:focus-within i.fa-magnifying-glass { color: var(--color-primary); }
+
+    .org-search-bar input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: none;
+        font-size: 15px;
+        color: var(--color-text-primary);
+    }
+
+    .org-search-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    .org-search-icon-btn {
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: var(--color-background);
+        color: var(--color-text-secondary);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .org-search-icon-btn:hover { background: rgba(37,99,235,0.1); color: var(--color-primary); transform: scale(1.06); }
+    .org-search-icon-btn.is-listening { background: var(--color-danger); color: #fff; animation: orgMicPulse 1.2s ease-in-out infinite; }
+
+    @keyframes orgMicPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    }
+
+    /* ---------- Filter chips ---------- */
+    .org-chip-row {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: var(--space-5);
+        scrollbar-width: thin;
+    }
+
+    .org-chip {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 16px;
+        border-radius: var(--radius-full);
+        border: 1.5px solid var(--color-border);
+        background: var(--color-card);
+        color: var(--color-text-secondary);
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .org-chip:hover { transform: translateY(-2px); border-color: var(--color-primary); color: var(--color-primary); }
+
+    .org-chip.is-active {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(37,99,235,0.35);
+        animation: orgChipPop 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @keyframes orgChipPop {
+        0% { transform: scale(0.94); }
+        60% { transform: scale(1.03); }
+        100% { transform: scale(1); }
+    }
+
+    /* ---------- Layout ---------- */
+    .org-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: var(--space-5);
+        align-items: start;
+    }
+
+    /* ---------- Org cards ---------- */
+    .org-card {
+        position: relative;
+        display: block;
+        background: var(--color-card);
+        border: 1px solid var(--color-border);
+        border-left: 3px solid var(--color-primary);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 14px;
+        text-decoration: none;
+        color: inherit;
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease;
+        animation: orgFadeUp 0.4s cubic-bezier(0.4,0,0.2,1) both;
+    }
+
+    .org-card:nth-child(1) { animation-delay: 0.03s; }
+    .org-card:nth-child(2) { animation-delay: 0.07s; }
+    .org-card:nth-child(3) { animation-delay: 0.11s; }
+    .org-card:nth-child(4) { animation-delay: 0.15s; }
+    .org-card:nth-child(5) { animation-delay: 0.19s; }
+    .org-card:nth-child(6) { animation-delay: 0.23s; }
+
+    .org-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(37,99,235,0.05), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.35s ease;
+        pointer-events: none;
+    }
+
+    .org-card:hover {
+        transform: translateY(-6px) scale(1.005);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .org-card:hover::before { opacity: 1; }
+
+    .org-card-top { display: flex; gap: 14px; align-items: flex-start; position: relative; z-index: 1; }
+
+    .org-card-logo {
+        width: 56px; height: 56px;
+        border-radius: 16px;
+        background: rgba(37,99,235,0.1);
+        color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+        overflow: hidden;
+        transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .org-card:hover .org-card-logo { transform: scale(1.08) rotate(-3deg); }
+    .org-card-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+    .org-card-body { flex: 1; min-width: 0; }
+
+    .org-card-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+    .org-card-name { font-family: var(--font-heading); font-weight: 700; font-size: 17px; }
+
+    .org-verified-badge {
+        display: inline-flex; align-items: center; gap: 3px;
+        font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+        color: var(--color-primary);
+        background: rgba(37,99,235,0.1);
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+    }
+
+    .org-card-meta { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px; }
+    .org-card-desc { font-size: 12.5px; color: var(--color-text-secondary); margin-bottom: 12px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+
+    .org-favorite-btn {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--color-border);
+        background: var(--color-card);
+        color: var(--color-text-secondary);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+        position: relative;
+        z-index: 2;
+    }
+
+    .org-favorite-btn:hover { transform: scale(1.12); border-color: var(--color-danger); color: var(--color-danger); }
+    .org-favorite-btn.is-favorite { color: var(--color-danger); border-color: var(--color-danger); background: rgba(239,68,68,0.08); }
+    .org-favorite-btn.is-favorite i { animation: orgFavPop 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+    @keyframes orgFavPop {
+        0% { transform: scale(0.6); }
+        60% { transform: scale(1.25); }
+        100% { transform: scale(1); }
+    }
+
+    .org-card-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .org-mini-stat {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        background: var(--color-background);
+        font-size: 12px;
+        color: var(--color-text-secondary);
+    }
+
+    .org-mini-stat i { color: var(--color-primary); font-size: 11px; }
+    .org-mini-stat strong { color: var(--color-text-primary); font-weight: 700; }
+
+    .org-status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 11px;
+        border-radius: var(--radius-full);
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+
+    .org-status-open { background: rgba(34,197,94,0.14); color: #15803d; }
+    .org-status-open i { animation: orgOpenPulse 1.6s ease-in-out infinite; }
+    .org-status-closed { background: rgba(100,116,139,0.14); color: #475569; }
+
+    @keyframes orgOpenPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    .org-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+    }
+
+    .org-book-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 18px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0;
+        transform: translateX(-6px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .org-card:hover .org-book-btn { opacity: 1; transform: translateX(0); }
+
+    .org-book-btn i { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .org-card:hover .org-book-btn i { transform: translateX(4px); }
+
+    /* ---------- Sidebar widgets ---------- */
+    .org-sidebar-widget {
+        background: var(--color-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: var(--space-4);
+        box-shadow: var(--shadow-sm);
+        animation: orgFadeUp 0.4s cubic-bezier(0.4,0,0.2,1) both;
+    }
+
+    .org-sidebar-widget h3 {
+        font-size: 13.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        color: var(--color-text-secondary);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .org-queue-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--color-border);
+        font-size: 13.5px;
+    }
+
+    .org-queue-row:last-child { border-bottom: none; }
+
+    .org-queue-row .live-dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: var(--color-success);
+        display: inline-block;
+        margin-right: 7px;
+        animation: orgOpenPulse 1.6s ease-in-out infinite;
+    }
+
+    .org-queue-count { font-family: var(--font-heading); font-weight: 700; color: var(--color-primary); }
+
+    .org-popular-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--color-border);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s ease;
+    }
+
+    .org-popular-item:last-child { border-bottom: none; }
+    .org-popular-item:hover { transform: translateX(3px); color: var(--color-primary); }
+
+    .org-popular-item .pop-icon {
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        background: rgba(37,99,235,0.1);
+        color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+    .org-popular-item .pop-name { font-weight: 600; font-size: 13px; }
+    .org-popular-item .pop-meta { font-size: 11px; color: var(--color-text-secondary); }
+
+    /* ---------- Skeleton (used while a client-side re-filter is in flight — progressive enhancement only) ---------- */
+    .org-skeleton {
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 14px;
+        background: linear-gradient(90deg, var(--color-background) 25%, var(--color-border) 37%, var(--color-background) 63%);
+        background-size: 400% 100%;
+        animation: orgShimmer 1.4s ease infinite;
+        height: 150px;
+    }
+
+    @keyframes orgShimmer {
+        0% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* ---------- Empty state ---------- */
+    .org-empty {
+        text-align: center;
+        padding: 56px 24px;
+        background: var(--color-card);
+        border: 1px dashed var(--color-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .org-empty .empty-icon {
+        width: 84px; height: 84px;
+        border-radius: 50%;
+        background: rgba(37,99,235,0.08);
+        color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 32px;
+        margin: 0 auto 18px;
+        animation: orgIlloFloat 3.5s ease-in-out infinite;
+    }
+
+    /* ---------- Pagination ---------- */
+    .org-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        margin-top: var(--space-5);
+        flex-wrap: wrap;
+    }
+
+    .org-page-btn {
+        min-width: 40px; height: 40px;
+        padding: 0 12px;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--color-border);
+        background: var(--color-card);
+        color: var(--color-text-secondary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13.5px; font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .org-page-btn:hover { transform: translateY(-2px); border-color: var(--color-primary); color: var(--color-primary); }
+    .org-page-btn.is-active { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); border-color: transparent; color: #fff; box-shadow: var(--shadow-glow, 0 6px 16px rgba(37,99,235,0.3)); }
+    .org-page-btn.is-disabled { opacity: 0.4; pointer-events: none; }
+
+    @keyframes orgFadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 992px) {
+        .org-layout { grid-template-columns: 1fr; }
+        .org-hero-grid { grid-template-columns: 1fr; }
+        .org-hero-illustration { display: none; }
+    }
+
+    @media (max-width: 560px) {
+        .org-hero { padding: 28px 20px; }
+        .org-card-stats { gap: 6px; }
+        .org-mini-stat { font-size: 11px; padding: 5px 9px; }
+        .org-book-btn { opacity: 1; transform: none; width: 100%; justify-content: center; margin-top: 10px; }
+        .org-card-footer { flex-direction: column; align-items: stretch; gap: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .org-card, .org-blob, .org-illo-center, .org-illo-chip { animation: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="org-page-bg">
+    <div class="org-blob org-blob-1"></div>
+    <div class="org-blob org-blob-2"></div>
+
+    <!-- ============ HERO ============ -->
+    <section class="org-hero">
+        <div class="org-hero-grid">
+            <div>
+                <h1>Choose Your Organization</h1>
+                <p class="subtitle">Find hospitals, banks, government offices, educational institutions, and other organizations near you. Book a digital token and skip long waiting lines.</p>
+                <div class="org-stat-row">
+                    <span class="org-stat-chip"><i class="fa-solid fa-building" style="color:var(--color-primary);"></i> <strong>{{ stats.organization_count }}</strong> Organizations</span>
+                    <span class="org-stat-chip"><i class="fa-solid fa-users" style="color:var(--color-primary);"></i> <strong>{{ stats.customer_count }}</strong> Customers</span>
+                    <span class="org-stat-chip"><i class="fa-solid fa-ticket" style="color:var(--color-primary);"></i> <strong>{{ stats.token_count }}</strong> Tokens Booked</span>
+                    <span class="org-stat-chip"><i class="fa-solid fa-circle-check" style="color:var(--color-success);"></i> <strong>{{ stats.open_now_count }}</strong> Open Now</span>
+                </div>
+            </div>
+            <div class="org-hero-illustration">
+                <span class="org-illo-chip chip-a"><i class="fa-solid fa-hospital"></i> Hospital</span>
+                <span class="org-illo-chip chip-b"><i class="fa-solid fa-building-columns"></i> Bank</span>
+                <span class="org-illo-chip chip-c"><i class="fa-solid fa-mobile-screen-button"></i> Mobile</span>
+                <span class="org-illo-chip chip-d"><i class="fa-solid fa-landmark"></i> Govt.</span>
+                <div class="org-illo-center">
+                    <i class="fa-solid fa-people-line"></i>
+                    <div class="il-num">{{ stats.organization_count }}</div>
+                    <div class="il-label">Ready to Serve You</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SEARCH ============ -->
+    <div class="org-search-wrap">
+        <form method="get" class="org-search-bar" id="org-search-form">
+            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="q" id="org-search-input" value="{{ query }}" placeholder="Search organizations by name, category, or city..." autocomplete="off">
+            <div class="org-search-actions">
+                {% if query %}
+                    <a href="?{% if selected_category %}category={{ selected_category }}{% endif %}" class="org-search-icon-btn" title="Clear search" aria-label="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                {% endif %}
+                <button type="button" class="org-search-icon-btn" id="org-voice-btn" title="Search by voice" aria-label="Search by voice">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+                <button type="submit" class="org-search-icon-btn" title="Search" aria-label="Search">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ============ FILTER CHIPS ============ -->
+    <div class="org-chip-row" role="tablist" aria-label="Filter by category">
+        <a href="?{% if query %}q={{ query }}{% endif %}" class="org-chip {% if not selected_category %}is-active{% endif %}">
+            <i class="fa-solid fa-border-all"></i> All
+        </a>
+        {% for value, label in category_choices %}
+            <a href="?category={{ value }}{% if query %}&q={{ query }}{% endif %}" class="org-chip {% if selected_category == value %}is-active{% endif %}">
+                {% if value == 'hospital' %}<i class="fa-solid fa-hospital"></i>
+                {% elif value == 'bank' %}<i class="fa-solid fa-building-columns"></i>
+                {% elif value == 'government' %}<i class="fa-solid fa-landmark"></i>
+                {% elif value == 'education' %}<i class="fa-solid fa-graduation-cap"></i>
+                {% elif value == 'retail' %}<i class="fa-solid fa-store"></i>
+                {% else %}<i class="fa-solid fa-building"></i>{% endif %}
+                {{ label }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- ============ LAYOUT: LIST + SIDEBAR ============ -->
+    <div class="org-layout">
+        <div>
+            {% if organizations %}
+                {% for organization in organizations %}
+                    <a href="{% url 'customers:select_service' slug=organization.slug %}" class="org-card" data-org-slug="{{ organization.slug }}" data-org-name="{{ organization.name }}">
+                        <div class="org-card-top">
+                            <div class="org-card-logo">
+                                {% if organization.logo %}
+                                    <img src="{{ organization.logo.url }}" alt="{{ organization.name }}">
+                                {% else %}
+                                    {% if organization.category == 'hospital' %}<i class="fa-solid fa-hospital"></i>
+                                    {% elif organization.category == 'bank' %}<i class="fa-solid fa-building-columns"></i>
+                                    {% elif organization.category == 'government' %}<i class="fa-solid fa-landmark"></i>
+                                    {% elif organization.category == 'education' %}<i class="fa-solid fa-graduation-cap"></i>
+                                    {% elif organization.category == 'retail' %}<i class="fa-solid fa-store"></i>
+                                    {% else %}<i class="fa-solid fa-building"></i>{% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="org-card-body">
+                                <div class="org-card-title-row">
+                                    <span class="org-card-name">{{ organization.name }}</span>
+                                    <span class="org-verified-badge"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                                </div>
+                                <div class="org-card-meta">
+                                    {{ organization.get_category_display }}{% if organization.city %} · {{ organization.city }}{% endif %}
+                                </div>
+                                {% if organization.description %}
+                                    <div class="org-card-desc">{{ organization.description }}</div>
+                                {% endif %}
+                            </div>
+                            <button type="button" class="org-favorite-btn js-favorite-btn" data-slug="{{ organization.slug }}" aria-label="Add to favorites" title="Add to favorites">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
+                        </div>
+
+                        <div class="org-card-stats">
+                            {% if organization.is_open %}
+                                <span class="org-status-badge org-status-open"><i class="fa-solid fa-circle"></i> Open</span>
+                            {% else %}
+                                <span class="org-status-badge org-status-closed"><i class="fa-solid fa-circle"></i> Closed</span>
+                            {% endif %}
+                            <span class="org-mini-stat"><i class="fa-solid fa-people-line"></i> <strong>{{ organization.waiting_count }}</strong> waiting</span>
+                            <span class="org-mini-stat"><i class="fa-regular fa-clock"></i> Est. <strong>{{ organization.estimated_wait }}m</strong></span>
+                        </div>
+
+                        <div class="org-card-footer">
+                            <span style="font-size:11.5px; color:var(--color-text-secondary);">
+                                <i class="fa-regular fa-clock"></i> Updated live
+                            </span>
+                            <span class="org-book-btn">View Services <i class="fa-solid fa-arrow-right"></i></span>
+                        </div>
+                    </a>
+                {% endfor %}
+
+                {% if is_paginated %}
+                    <div class="org-pagination">
+                        <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                           class="org-page-btn {% if not page_obj.has_previous %}is-disabled{% endif %}">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num == page_obj.number %}
+                                <span class="org-page-btn is-active">{{ num }}</span>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ num }}" class="org-page-btn">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.next_page_number }}"
+                           class="org-page-btn {% if not page_obj.has_next %}is-disabled{% endif %}">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="org-empty">
+                    <div class="empty-icon"><i class="fa-solid fa-building-circle-xmark"></i></div>
+                    <h2 style="font-size:1.1rem; margin-bottom:6px;">No organizations found</h2>
+                    <p style="color:var(--color-text-secondary); font-size:0.9rem; margin-bottom:20px;">
+                        {% if query %}We couldn't find anything for "{{ query }}". Try searching another name or city.{% else %}No organizations match this filter yet.{% endif %}
+                    </p>
+                    <a href="{% url 'customers:select_organization' %}" class="btn btn-primary"><i class="fa-solid fa-rotate-left"></i> Reset Search</a>
+                </div>
+            {% endif %}
+
+            <div id="org-recently-viewed-section" style="display:none; margin-top: var(--space-6);">
+                <h2 style="font-size:1rem; margin-bottom: var(--space-3);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--color-primary);"></i> Recently Viewed</h2>
+                <div id="org-recently-viewed-list" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;"></div>
+            </div>
+        </div>
+
+        <!-- ============ SIDEBAR ============ -->
+        <div>
+            <div class="org-sidebar-widget">
+                <h3><i class="fa-solid fa-tower-broadcast" style="color:var(--color-primary);"></i> Today's Queue Status</h3>
+                {% for row in category_queue_status %}
+                    <div class="org-queue-row">
+                        <span><span class="live-dot"></span>{{ row.label }}</span>
+                        <span class="org-queue-count">{{ row.count }} Active</span>
+                    </div>
+                {% empty %}
+                    <p style="font-size:12.5px; color:var(--color-text-secondary);">No queues open right now.</p>
+                {% endfor %}
+            </div>
+
+            {% if popular_organizations %}
+                <div class="org-sidebar-widget">
+                    <h3><i class="fa-solid fa-fire" style="color:var(--color-primary);"></i> Popular Right Now</h3>
+                    {% for org in popular_organizations %}
+                        <a href="{% url 'customers:select_service' slug=org.slug %}" class="org-popular-item">
+                            <span class="pop-icon"><i class="fa-solid fa-building"></i></span>
+                            <span>
+                                <div class="pop-name">{{ org.name }}</div>
+                                <div class="pop-meta">{{ org.waiting_count }} people waiting</div>
+                            </span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="org-sidebar-widget" id="org-favorites-widget" style="display:none;">
+                <h3><i class="fa-solid fa-heart" style="color:var(--color-danger);"></i> Your Favorites</h3>
+                <div id="org-favorites-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    var FAV_KEY = 'qless_favorite_orgs';
+    var RECENT_KEY = 'qless_recently_viewed_orgs';
+
+    function readList(key) {
+        try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
+    }
+    function writeList(key, list) {
+        try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) { /* storage unavailable */ }
+    }
+
+    // ---------- Favorites ----------
+    var favorites = readList(FAV_KEY);
+
+    function isFavorite(slug) { return favorites.indexOf(slug) !== -1; }
+
+    function paintFavoriteButtons() {
+        document.querySelectorAll('.js-favorite-btn').forEach(function (btn) {
+            var slug = btn.getAttribute('data-slug');
+            var icon = btn.querySelector('i');
+            if (isFavorite(slug)) {
+                btn.classList.add('is-favorite');
+                icon.className = 'fa-solid fa-heart';
+            } else {
+                btn.classList.remove('is-favorite');
+                icon.className = 'fa-regular fa-heart';
+            }
+        });
+    }
+
+    document.querySelectorAll('.js-favorite-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var slug = btn.getAttribute('data-slug');
+            var idx = favorites.indexOf(slug);
+            if (idx === -1) { favorites.push(slug); } else { favorites.splice(idx, 1); }
+            writeList(FAV_KEY, favorites);
+            paintFavoriteButtons();
+            renderFavoritesWidget();
+        });
+    });
+
+    function renderFavoritesWidget() {
+        var widget = document.getElementById('org-favorites-widget');
+        var list = document.getElementById('org-favorites-list');
+        if (!widget || !list) return;
+        list.innerHTML = '';
+        if (favorites.length === 0) { widget.style.display = 'none'; return; }
+        widget.style.display = 'block';
+        favorites.slice(0, 6).forEach(function (slug) {
+            var card = document.querySelector('.org-card[data-org-slug="' + CSS.escape(slug) + '"]');
+            var name = card ? card.getAttribute('data-org-name') : slug;
+            var row = document.createElement('div');
+            row.className = 'org-queue-row';
+            row.innerHTML = '<span><i class="fa-solid fa-heart" style="color:var(--color-danger); margin-right:6px;"></i>' + name + '</span>';
+            list.appendChild(row);
+        });
+    }
+
+    paintFavoriteButtons();
+    renderFavoritesWidget();
+
+    // ---------- Recently viewed ----------
+    document.querySelectorAll('.org-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+            var slug = card.getAttribute('data-org-slug');
+            var name = card.getAttribute('data-org-name');
+            var recent = readList(RECENT_KEY).filter(function (item) { return item.slug !== slug; });
+            recent.unshift({ slug: slug, name: name });
+            writeList(RECENT_KEY, recent.slice(0, 8));
+        });
+    });
+
+    (function renderRecentlyViewed() {
+        var recent = readList(RECENT_KEY);
+        var section = document.getElementById('org-recently-viewed-section');
+        var list = document.getElementById('org-recently-viewed-list');
+        if (!section || !list || recent.length === 0) return;
+        section.style.display = 'block';
+        recent.forEach(function (item) {
+            var chip = document.createElement('a');
+            chip.href = '/customer/organizations/' + item.slug + '/services/';
+            chip.className = 'org-chip';
+            chip.style.flexShrink = '0';
+            chip.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> ' + item.name;
+            list.appendChild(chip);
+        });
+    })();
+
+    // ---------- Voice search (progressive enhancement) ----------
+    var voiceBtn = document.getElementById('org-voice-btn');
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (voiceBtn) {
+        if (!SpeechRecognition) {
+            voiceBtn.style.display = 'none';
+        } else {
+            voiceBtn.addEventListener('click', function () {
+                var recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                voiceBtn.classList.add('is-listening');
+                recognition.start();
+                recognition.onresult = function (event) {
+                    var transcript = event.results[0][0].transcript;
+                    document.getElementById('org-search-input').value = transcript;
+                    document.getElementById('org-search-form').submit();
+                };
+                recognition.onend = function () { voiceBtn.classList.remove('is-listening'); };
+                recognition.onerror = function () { voiceBtn.classList.remove('is-listening'); };
+            });
+        }
+    }
+})();
+</script>
+{% endblock %}

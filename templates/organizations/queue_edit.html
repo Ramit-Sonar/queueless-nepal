@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{{ queue.service.name }} Queue — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* queue_edit.html — page-specific liquid-glass polish */
+    .card {
+        animation: qe-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .table-wrap {
+        animation: qe-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    @keyframes qe-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes qe-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ queue.service.name }} — {{ queue.queue_date }}</h1>
+
+<div class="card" style="max-width: 480px; margin-bottom: var(--space-5);">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.priority.id_for_label }}">Priority</label>
+                {{ form.priority|add_class:"form-control" }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Save Queue Settings</button>
+    </form>
+</div>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Tokens ({{ tokens.count }})</h2>
+
+{% if tokens %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Token</th><th>Customer</th><th>Status</th><th>Booked at</th></tr>
+            </thead>
+            <tbody>
+                {% for token in tokens %}
+                    <tr>
+                        <td>{{ token.display_number }}</td>
+                        <td>{{ token.customer.get_full_name|default:token.customer.username }}</td>
+                        <td><span class="badge badge-{{ token.status }}">{{ token.get_status_display }}</span></td>
+                        <td>{{ token.created_at|date:"g:i A" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card">
+        <i class="fa-solid fa-ticket"></i>
+        <p>No tokens booked into this queue yet.</p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}QR Code Generator — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* qr_generator/generate.html — liquid-glass polish, matches organizations app pages */
+    .qr-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+        gap: var(--space-5);
+        align-items: start;
+    }
+
+    @media (max-width: 860px) {
+        .qr-layout { grid-template-columns: 1fr; }
+    }
+
+    .qr-layout .card {
+        animation: qrg-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .qr-layout .card:nth-of-type(2) { animation-delay: 0.08s; }
+
+    @keyframes qrg-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .qr-color-row {
+        display: flex;
+        gap: var(--space-4);
+        flex-wrap: wrap;
+    }
+
+    .qr-color-field {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .qr-color-field input[type="color"] {
+        width: 100%;
+        height: 44px;
+        padding: 4px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-card);
+        cursor: pointer;
+    }
+
+    .qr-link-row {
+        display: flex;
+        gap: var(--space-2);
+    }
+
+    .qr-link-row input {
+        flex: 1;
+        font-size: 0.82rem;
+    }
+
+    .qr-preview-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-4);
+        text-align: center;
+    }
+
+    .qr-preview-frame {
+        width: 100%;
+        max-width: 260px;
+        aspect-ratio: 1 / 1;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .qr-preview-frame:hover {
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    .qr-preview-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        animation: qrg-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes qrg-pop {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .qr-copied-tag {
+        font-size: 0.78rem;
+        color: var(--color-success, #16a34a);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .qr-copied-tag.is-visible { opacity: 1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">QR Code Generator</h1>
+<p style="color: var(--color-text-secondary); margin-bottom: var(--space-5); max-width:640px;">
+    Generate a scannable QR code that opens
+    <strong>{{ organization.name }}</strong>'s service booking page directly.
+    Pick your colors, generate, then download the PNG to print on posters, counters, or receipts.
+</p>
+
+<div class="qr-layout">
+    <div class="card">
+        <h2 style="font-size:0.95rem; margin-bottom: var(--space-4);">Settings</h2>
+
+        <div class="form-group">
+            <label class="form-label">Link this QR code opens</label>
+            <div class="qr-link-row">
+                <input type="text" id="qr-target-url" class="form-control" value="{{ target_url }}" readonly>
+                <button type="button" id="qr-copy-btn" class="btn btn-outline"><i class="fa-solid fa-copy"></i></button>
+            </div>
+            <span id="qr-copied-tag" class="qr-copied-tag">Copied!</span>
+        </div>
+
+        <div class="qr-color-row" style="margin-top: var(--space-4);">
+            <div class="qr-color-field">
+                <label class="form-label" for="qr-fg-color">QR color</label>
+                <input type="color" id="qr-fg-color" value="#{{ default_fg }}">
+            </div>
+            <div class="qr-color-field">
+                <label class="form-label" for="qr-bg-color">Background color</label>
+                <input type="color" id="qr-bg-color" value="#{{ default_bg }}">
+            </div>
+        </div>
+
+        <button type="button" id="qr-generate-btn" class="btn btn-primary" style="margin-top: var(--space-5);">
+            <i class="fa-solid fa-qrcode"></i> Generate QR Code
+        </button>
+    </div>
+
+    <div class="card qr-preview-wrap">
+        <h2 style="font-size:0.95rem; align-self:flex-start;">Preview</h2>
+        <div class="qr-preview-frame">
+            <img id="qr-preview-img"
+                 src="{% url 'qr_generator:image' %}?fg={{ default_fg }}&bg={{ default_bg }}"
+                 alt="QR code for {{ organization.name }}">
+        </div>
+        <a id="qr-download-btn"
+           class="btn btn-outline"
+           style="width:100%;"
+           href="{% url 'qr_generator:image' %}?fg={{ default_fg }}&bg={{ default_bg }}&download=1"
+           download="{{ organization.slug }}-qr-code.png">
+            <i class="fa-solid fa-download"></i> Download PNG
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    var imageUrl = "{% url 'qr_generator:image' %}";
+    var fgInput = document.getElementById('qr-fg-color');
+    var bgInput = document.getElementById('qr-bg-color');
+    var previewImg = document.getElementById('qr-preview-img');
+    var downloadBtn = document.getElementById('qr-download-btn');
+    var generateBtn = document.getElementById('qr-generate-btn');
+
+    function hex(input) {
+        return input.value.replace('#', '');
+    }
+
+    function regenerate() {
+        var fg = hex(fgInput);
+        var bg = hex(bgInput);
+        var cacheBust = Date.now();
+        previewImg.src = imageUrl + '?fg=' + fg + '&bg=' + bg + '&t=' + cacheBust;
+        downloadBtn.href = imageUrl + '?fg=' + fg + '&bg=' + bg + '&download=1';
+    }
+
+    generateBtn.addEventListener('click', regenerate);
+    fgInput.addEventListener('input', regenerate);
+    bgInput.addEventListener('input', regenerate);
+
+    var copyBtn = document.getElementById('qr-copy-btn');
+    var copiedTag = document.getElementById('qr-copied-tag');
+    var urlInput = document.getElementById('qr-target-url');
+
+    copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(urlInput.value).then(function () {
+            copiedTag.classList.add('is-visible');
+            setTimeout(function () { copiedTag.classList.remove('is-visible'); }, 1500);
+        });
+    });
+})();
+</script>
+{% endblock %}

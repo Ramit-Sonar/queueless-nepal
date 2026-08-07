@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Payments — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* payment_list.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: pl-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .chip.is-active {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .table-wrap {
+        animation: pl-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    .badge-waiting {
+        animation: pl-badge-pulse 1.6s ease-in-out infinite;
+    }
+
+    .icon-btn {
+        transition: transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
+
+    @keyframes pl-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pl-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pl-badge-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+        50% { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Payments</h1>
+    <div style="display:flex; gap: var(--space-2);">
+        <a href="{% url 'dashboard:revenue_report' %}" class="btn btn-outline"><i class="fa-solid fa-chart-line"></i> Revenue Report</a>
+        <a href="{% url 'dashboard:payment_add' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Record Payment</a>
+    </div>
+</div>
+
+<div class="chip-row">
+    <a href="?status=" class="chip {% if not selected_status %}is-active{% endif %}">All</a>
+    {% for value, label in status_choices %}
+        <a href="?status={{ value }}" class="chip {% if selected_status == value %}is-active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+{% if payments %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Transaction</th><th>Organization</th><th>Amount</th><th>Provider</th><th>Status</th><th>Paid at</th><th></th></tr></thead>
+            <tbody>
+                {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.transaction_id }}</td>
+                        <td>{{ payment.subscription.organization.name }}</td>
+                        <td>NPR {{ payment.amount }}</td>
+                        <td>{{ payment.get_provider_display }}</td>
+                        <td><span class="badge badge-{% if payment.status == 'success' %}completed{% elif payment.status == 'failed' %}cancelled{% else %}waiting{% endif %}">{{ payment.get_status_display }}</span></td>
+                        <td>{{ payment.paid_at|date:"M j, Y" }}</td>
+                        <td><a href="{% url 'dashboard:payment_invoice' pk=payment.pk %}" class="icon-btn" title="Download invoice"><i class="fa-solid fa-file-pdf"></i></a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+        <div style="display:flex; justify-content:center; gap: var(--space-3); margin-top: var(--space-4);">
+            {% if page_obj.has_previous %}<a href="?status={{ selected_status }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?status={{ selected_status }}&page={{ page_obj.next_page_number }}" class="btn btn-outline">Next</a>{% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-sack-dollar"></i><p>No payments recorded yet.</p></div>
+{% endif %}
+{% endblock %}

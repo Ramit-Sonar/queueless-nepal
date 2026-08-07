@@ -1,0 +1,81 @@
+{% extends "auth_base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Organization / Staff Sign In — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* business_login.html — page-specific liquid-glass polish */
+    .auth-badge--business {
+        animation: biz-badge-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both, biz-badge-glow 2.6s ease-in-out 0.4s infinite;
+    }
+
+    .auth-card h1 {
+        background: linear-gradient(135deg, var(--color-text-primary), var(--color-primary-dark));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .form-group {
+        animation: biz-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .form-group:nth-of-type(1) { animation-delay: 0.08s; }
+    .form-group:nth-of-type(2) { animation-delay: 0.13s; }
+
+    .btn-primary.btn-block {
+        animation: biz-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.18s both;
+    }
+
+    @keyframes biz-badge-in {
+        from { opacity: 0; transform: translateY(-8px) scale(0.9); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes biz-badge-glow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.25); }
+        50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+    }
+
+    @keyframes biz-fade-up {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-badge-row">
+    <span class="auth-badge auth-badge--business"><i class="fa-solid fa-building"></i> Organization &amp; Staff</span>
+</div>
+<h1>Welcome back</h1>
+<p class="auth-card__subtitle">Sign in to manage your queues, staff, and services.</p>
+
+{% if form.non_field_errors %}
+    <ul class="form-error-list">
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username|add_class:"form-control" }}
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password|add_class:"form-control" }}
+    </div>
+    <div style="text-align:right; margin-bottom: var(--space-4);">
+        <a href="{% url 'accounts:password_reset' %}" style="font-size:0.85rem; color: var(--color-primary);">Forgot password?</a>
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+</form>
+
+<div class="auth-card__footer">
+    Booking a token as a customer? <a href="{% url 'accounts:login' %}">Customer login</a>
+</div>
+{% endblock %}

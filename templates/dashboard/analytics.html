@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* analytics.html — page-specific liquid-glass polish */
+    .card {
+        animation: an-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .card:nth-of-type(1) { animation-delay: 0.03s; }
+    .card:nth-of-type(2) { animation-delay: 0.08s; }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    @keyframes an-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Platform Analytics</h1>
+
+<div class="card" style="margin-bottom: var(--space-5);">
+    <h2 style="font-size:1rem; margin-bottom: var(--space-4);">Platform Usage — tokens booked, last 14 days</h2>
+    <canvas id="usage-chart" height="80"></canvas>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-5);">
+    <h2 style="font-size:1rem; margin-bottom: var(--space-4);">Customer Growth — new signups, last 14 days</h2>
+    <canvas id="growth-chart" height="80"></canvas>
+</div>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-5);">
+    <div>
+        <h2 style="font-size:1rem; margin-bottom: var(--space-3);">Top Organizations</h2>
+        {% if top_organizations %}
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Organization</th><th>Tokens</th></tr></thead>
+                    <tbody>
+                        {% for org in top_organizations %}
+                            <tr><td>{{ org.name }}</td><td>{{ org.token_count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state card"><i class="fa-solid fa-building"></i><p>No data yet.</p></div>
+        {% endif %}
+    </div>
+    <div>
+        <h2 style="font-size:1rem; margin-bottom: var(--space-3);">Top Services</h2>
+        {% if top_services %}
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Service</th><th>Organization</th><th>Tokens</th></tr></thead>
+                    <tbody>
+                        {% for service in top_services %}
+                            <tr><td>{{ service.name }}</td><td>{{ service.organization.name }}</td><td>{{ service.token_count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state card"><i class="fa-solid fa-list-check"></i><p>No data yet.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    new Chart(document.getElementById('usage-chart'), {
+        type: 'line',
+        data: {
+            labels: {{ usage_labels|safe }},
+            datasets: [{
+                data: {{ usage_counts|safe }},
+                borderColor: '#2563EB', backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                fill: true, tension: 0.35, pointRadius: 2,
+            }],
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+    });
+    new Chart(document.getElementById('growth-chart'), {
+        type: 'line',
+        data: {
+            labels: {{ growth_labels|safe }},
+            datasets: [{
+                data: {{ growth_counts|safe }},
+                borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                fill: true, tension: 0.35, pointRadius: 2,
+            }],
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+    });
+</script>
+{% endblock %}

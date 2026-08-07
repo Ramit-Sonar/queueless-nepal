@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Assign Plan — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* subscription_assign.html — page-specific liquid-glass polish */
+    .card {
+        animation: sa2-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .form-group {
+        animation: sa2-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s both;
+    }
+
+    @keyframes sa2-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sa2-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Assign a Plan to {{ organization.name }}</h1>
+
+<div class="card" style="max-width: 480px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Plan</label>
+            {{ form.plan|add_class:"form-control" }}
+        </div>
+        <div class="form-row">
+            <a href="{% url 'dashboard:subscriptions' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Assign (30-day term)</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

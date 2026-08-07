@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Revenue Report — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* revenue_report.html — page-specific liquid-glass polish */
+    .kpi-card__value {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .card {
+        animation: rr-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    @keyframes rr-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Revenue Report</h1>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="kpi-card__value">NPR {{ total_revenue }}</div>
+        <div class="kpi-card__label">Total revenue (all time)</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-5);">
+    <h2 style="font-size:1rem; margin-bottom: var(--space-4);">Monthly Revenue — last 6 months</h2>
+    <canvas id="revenue-chart" height="90"></canvas>
+</div>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Revenue by Plan</h2>
+{% if by_plan %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Plan</th><th>Revenue</th></tr></thead>
+            <tbody>
+                {% for row in by_plan %}
+                    <tr><td>{{ row.subscription__plan__tier|capfirst }}</td><td>NPR {{ row.total }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-chart-pie"></i><p>No revenue recorded yet.</p></div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    new Chart(document.getElementById('revenue-chart'), {
+        type: 'bar',
+        data: {
+            labels: {{ monthly_labels|safe }},
+            datasets: [{
+                data: {{ monthly_totals|safe }},
+                backgroundColor: '#2563EB',
+                borderRadius: 6,
+            }],
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+    });
+</script>
+{% endblock %}

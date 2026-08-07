@@ -1,0 +1,80 @@
+{% extends "auth_base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Super Admin Sign In — QueueLess Nepal{% endblock %}
+{% block auth_card_class %}auth-card--restricted{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* super_admin_login.html — page-specific liquid-glass polish */
+    .auth-badge--restricted {
+        animation: sa-badge-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both, sa-badge-glow 2.2s ease-in-out 0.4s infinite;
+    }
+
+    .auth-badge--restricted i {
+        animation: sa-shield-pulse 2.2s ease-in-out infinite;
+    }
+
+    .form-group {
+        animation: sa-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .form-group:nth-of-type(1) { animation-delay: 0.1s; }
+    .form-group:nth-of-type(2) { animation-delay: 0.15s; }
+
+    .btn-primary.btn-block {
+        animation: sa-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+    }
+
+    @keyframes sa-badge-in {
+        from { opacity: 0; transform: translateY(-8px) scale(0.9); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes sa-badge-glow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
+
+    @keyframes sa-shield-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.55; }
+    }
+
+    @keyframes sa-fade-up {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-badge-row">
+    <span class="auth-badge auth-badge--restricted"><i class="fa-solid fa-shield-halved"></i> Restricted Access</span>
+</div>
+<h1>Super Admin Sign In</h1>
+<p class="auth-card__subtitle">Platform administration access only.</p>
+
+{% if form.non_field_errors %}
+    <ul class="form-error-list">
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username|add_class:"form-control" }}
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password|add_class:"form-control" }}
+    </div>
+    <div style="text-align:right; margin-bottom: var(--space-4);">
+        <a href="{% url 'accounts:password_reset' %}" style="font-size:0.85rem; color: var(--color-primary);">Forgot password?</a>
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+</form>
+{% endblock %}

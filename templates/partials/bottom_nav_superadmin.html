@@ -1,0 +1,45 @@
+<style>
+    /* bottom_nav_superadmin.html — internal liquid-glass polish */
+    nav.bottom-nav {
+        animation: bnsa-slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    nav.bottom-nav .bottom-nav__item i {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    nav.bottom-nav .bottom-nav__item.is-active i {
+        transform: translateY(-2px) scale(1.12);
+    }
+
+    nav.bottom-nav .bottom-nav__item:active {
+        transform: scale(0.94);
+    }
+
+    @keyframes bnsa-slide-up {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        nav.bottom-nav { animation: none; }
+    }
+</style>
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard:platform_dashboard' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'platform_dashboard' %}is-active{% endif %}">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="{% url 'dashboard:organizations' %}" class="bottom-nav__item {% if 'organization' in request.resolver_match.url_name %}is-active{% endif %}">
+        <i class="fa-solid fa-building"></i>
+        <span>Orgs</span>
+    </a>
+    <a href="{% url 'dashboard:users' %}" class="bottom-nav__item {% if 'user' in request.resolver_match.url_name %}is-active{% endif %}">
+        <i class="fa-solid fa-users"></i>
+        <span>Users</span>
+    </a>
+    <a href="{% url 'dashboard:analytics' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'analytics' %}is-active{% endif %}">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Analytics</span>
+    </a>
+</nav>

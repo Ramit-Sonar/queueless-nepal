@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}My Reports — Staff{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* staff/reports.html — page-specific liquid-glass polish */
+    .kpi-card__icon {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .kpi-card:hover .kpi-card__icon {
+        transform: scale(1.15) rotate(-6deg);
+    }
+
+    .table-wrap {
+        animation: sr-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    @keyframes sr-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">My Reports</h1>
+<p style="color: var(--color-text-secondary); font-size:0.85rem; margin-top:-12px; margin-bottom: var(--space-4);">Today</p>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="kpi-card__value">{{ completed_today_count }}</div>
+        <div class="kpi-card__label">Completed today</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-regular fa-clock"></i></div>
+        <div class="kpi-card__value">{{ avg_service_minutes }}m</div>
+        <div class="kpi-card__label">Avg. service time</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-people-line"></i></div>
+        <div class="kpi-card__value">{{ pending_count }}</div>
+        <div class="kpi-card__label">Pending customers</div>
+    </div>
+</div>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Tokens You Completed Today</h2>
+{% if completed_today %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Token</th><th>Service</th><th>Customer</th><th>Completed at</th></tr></thead>
+            <tbody>
+                {% for token in completed_today %}
+                    <tr>
+                        <td>{{ token.display_number }}</td>
+                        <td>{{ token.queue.service.name }}</td>
+                        <td>{{ token.customer.get_full_name|default:token.customer.username }}</td>
+                        <td>{{ token.completed_at|date:"g:i A" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-circle-check"></i><p>You haven't completed any tokens yet today.</p></div>
+{% endif %}
+{% endblock %}

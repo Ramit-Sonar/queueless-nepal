@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Settings — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* settings_form.html — page-specific liquid-glass polish */
+    .card {
+        animation: osf-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .card h2 {
+        position: relative;
+        padding-bottom: var(--space-2);
+    }
+
+    .card h2::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 32px;
+        height: 2px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+        border-radius: var(--radius-full);
+    }
+
+    .form-group {
+        animation: osf-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes osf-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes osf-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Settings</h1>
+
+<div class="card" style="max-width: 560px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <h2 style="font-size:0.95rem; margin-bottom: var(--space-3);">Queue Rules</h2>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.max_active_tokens_per_customer.id_for_label }}">
+                Max active tokens per customer
+            </label>
+            {{ form.max_active_tokens_per_customer|add_class:"form-control" }}
+            <div class="form-help">How many tokens one customer can hold at once across your services.</div>
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap: var(--space-3);">
+            {{ form.allow_customer_rebooking }}
+            <label class="form-label" style="margin:0;" for="{{ form.allow_customer_rebooking.id_for_label }}">
+                Allow customers to rebook a past token
+            </label>
+        </div>
+
+        <h2 style="font-size:0.95rem; margin: var(--space-5) 0 var(--space-3);">Notifications</h2>
+
+        <div class="form-group" style="display:flex; align-items:center; gap: var(--space-3);">
+            {{ form.notify_on_new_booking }}
+            <label class="form-label" style="margin:0;" for="{{ form.notify_on_new_booking.id_for_label }}">
+                Notify me when a new token is booked
+            </label>
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap: var(--space-3);">
+            {{ form.notify_daily_summary }}
+            <label class="form-label" style="margin:0;" for="{{ form.notify_daily_summary.id_for_label }}">
+                Send me a daily summary
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: var(--space-3);">Save Settings</button>
+    </form>
+</div>
+{% endblock %}

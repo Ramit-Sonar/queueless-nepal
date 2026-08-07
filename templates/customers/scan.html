@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Scan QR — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* scan.html — page-specific liquid-glass polish */
+    .scanner-frame {
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.06),
+            0 12px 32px rgba(15, 23, 42, 0.18),
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        animation: scan-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .scanner-frame__border {
+        animation: scan-pulse 2.2s ease-in-out infinite;
+    }
+
+    .scanner-frame::after {
+        content: '';
+        position: absolute;
+        left: var(--space-5);
+        right: var(--space-5);
+        height: 2px;
+        top: 50%;
+        background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+        box-shadow: 0 0 12px 2px rgba(56, 189, 248, 0.7);
+        animation: scan-sweep 2.4s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes scan-fade-in {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes scan-pulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.35); }
+        50% { opacity: 0.85; box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
+    }
+
+    @keyframes scan-sweep {
+        0%, 100% { top: var(--space-5); opacity: 0; }
+        10% { opacity: 1; }
+        50% { top: calc(100% - var(--space-5)); opacity: 1; }
+        60% { opacity: 0; }
+    }
+
+    #scanner-message {
+        transition: color 0.2s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .scanner-frame__border, .scanner-frame::after { animation: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Scan Organization QR</h1>
+
+<div class="card" style="text-align:center;">
+    <div class="scanner-frame" id="scanner-frame">
+        <video id="scanner-video" playsinline muted></video>
+        <div class="scanner-frame__border"></div>
+    </div>
+    <canvas id="scanner-canvas" style="display:none;"></canvas>
+    <p id="scanner-message" style="color: var(--color-text-secondary); margin-top: var(--space-4); font-size:0.88rem;">
+        Point your camera at the organization's QR code.
+    </p>
+</div>
+
+<div class="card" style="margin-top: var(--space-4);">
+    <p style="font-weight:600; margin-bottom: var(--space-3); font-size:0.9rem;">Or enter the code manually</p>
+    <form method="get" action="{% url 'customers:scan_lookup' %}" style="display:flex; gap: var(--space-2);">
+        <input type="text" name="code" class="form-control" placeholder="e.g. city-hospital" required style="flex:1; min-width:0;">
+        <button type="submit" class="btn btn-primary">Go</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+(function () {
+    const video = document.getElementById('scanner-video');
+    const canvas = document.getElementById('scanner-canvas');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const messageEl = document.getElementById('scanner-message');
+    const lookupUrl = "{% url 'customers:scan_lookup' %}";
+    let scanning = true;
+
+    function handleDecoded(data) {
+        scanning = false;
+        messageEl.textContent = 'QR detected — redirecting…';
+        try {
+            const url = new URL(data, window.location.origin);
+            if (url.origin === window.location.origin) {
+                window.location.href = url.pathname;
+                return;
+            }
+        } catch (e) {
+            // not a full URL — fall through to manual lookup
+        }
+        window.location.href = lookupUrl + '?code=' + encodeURIComponent(data);
+    }
+
+    function tick() {
+        if (!scanning) return;
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert',
+            });
+            if (code && code.data) {
+                handleDecoded(code.data);
+                return;
+            }
+        }
+        requestAnimationFrame(tick);
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function (stream) {
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                requestAnimationFrame(tick);
+            })
+            .catch(function () {
+                messageEl.textContent = 'Camera access denied. Use manual entry below instead.';
+            });
+    } else {
+        messageEl.textContent = 'Camera not supported on this browser. Use manual entry below.';
+    }
+})();
+</script>
+{% endblock %}

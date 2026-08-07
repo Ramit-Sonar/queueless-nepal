@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Organization Profile — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* profile_form.html — page-specific liquid-glass polish */
+    .card {
+        animation: opf-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .card img {
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .card img:hover {
+        transform: scale(1.05);
+    }
+
+    .form-group, .form-row {
+        animation: opf-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes opf-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes opf-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Organization Profile</h1>
+
+<div class="card" style="max-width: 640px;">
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% if organization.logo %}
+            <img src="{{ organization.logo.url }}" alt="{{ organization.name }}" style="width:72px; height:72px; object-fit:cover; border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.logo.id_for_label }}">Logo</label>
+            {{ form.logo|add_class:"form-control" }}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.name.id_for_label }}">Organization name</label>
+            {{ form.name|add_class:"form-control" }}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.city.id_for_label }}">City</label>
+                {{ form.city|add_class:"form-control" }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description|add_class:"form-control" }}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.address.id_for_label }}">Address</label>
+            {{ form.address|add_class:"form-control" }}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone number</label>
+                {{ form.phone_number|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email|add_class:"form-control" }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.opening_time.id_for_label }}">Opening time</label>
+                {{ form.opening_time|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.closing_time.id_for_label }}">Closing time</label>
+                {{ form.closing_time|add_class:"form-control" }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+</div>
+{% endblock %}

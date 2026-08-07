@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Subscriptions — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* subscription_list.html — page-specific liquid-glass polish */
+    details.card {
+        animation: sl-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    details.card:nth-of-type(1) { animation-delay: 0.03s; }
+    details.card:nth-of-type(2) { animation-delay: 0.08s; }
+    details.card:nth-of-type(3) { animation-delay: 0.13s; }
+
+    details.card:hover {
+        transform: translateY(-3px);
+    }
+
+    details.card[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    details.card summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .table-wrap {
+        animation: sl-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    .badge-waiting {
+        animation: sl-badge-pulse 1.6s ease-in-out infinite;
+    }
+
+    .list-item {
+        animation: sl-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes sl-fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sl-badge-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+        50% { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Subscriptions</h1>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Plans</h2>
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-5);">
+    {% for plan in plans %}
+        <details class="card" style="padding:0;">
+            <summary style="list-style:none; cursor:pointer; padding: var(--space-4);">
+                <div style="font-weight:700; font-family: var(--font-heading);">{{ plan.get_tier_display }}</div>
+                <div style="color: var(--color-primary); font-size:1.3rem; font-weight:700; margin: var(--space-2) 0;">NPR {{ plan.monthly_price }}<span style="font-size:0.8rem; color: var(--color-text-secondary); font-weight:400;">/mo</span></div>
+                <div style="font-size:0.8rem; color: var(--color-text-secondary);">
+                    {{ plan.max_staff }} staff · {{ plan.max_services }} services · {{ plan.max_departments }} departments
+                </div>
+            </summary>
+            <form method="post" action="{% url 'dashboard:plan_edit' pk=plan.pk %}" style="padding: 0 var(--space-4) var(--space-4); display:flex; flex-direction:column; gap: var(--space-3);">
+                {% csrf_token %}
+                <input type="hidden" name="is_active" value="on">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Monthly price (NPR)</label>
+                    <input type="number" step="0.01" name="monthly_price" value="{{ plan.monthly_price }}" class="form-control">
+                </div>
+                <div style="display:flex; gap: var(--space-2);">
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <label class="form-label">Staff</label>
+                        <input type="number" name="max_staff" value="{{ plan.max_staff }}" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <label class="form-label">Services</label>
+                        <input type="number" name="max_services" value="{{ plan.max_services }}" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <label class="form-label">Depts</label>
+                        <input type="number" name="max_departments" value="{{ plan.max_departments }}" class="form-control">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </details>
+    {% endfor %}
+</div>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Organization Subscriptions</h2>
+{% if subscriptions %}
+    <div class="table-wrap" style="margin-bottom: var(--space-5);">
+        <table class="data-table">
+            <thead><tr><th>Organization</th><th>Plan</th><th>Status</th><th>Expires</th><th></th></tr></thead>
+            <tbody>
+                {% for sub in subscriptions %}
+                    <tr>
+                        <td>{{ sub.organization.name }}</td>
+                        <td>{{ sub.plan.get_tier_display }}</td>
+                        <td>
+                            {% if sub.is_expiring_soon %}<span class="badge badge-waiting">Expiring Soon</span>
+                            {% elif sub.status == 'active' %}<span class="badge badge-completed">Active</span>
+                            {% else %}<span class="badge badge-cancelled">{{ sub.get_status_display }}</span>{% endif %}
+                        </td>
+                        <td>{{ sub.end_date }}</td>
+                        <td>
+                            <form method="post" action="{% url 'dashboard:subscription_renew' pk=sub.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">Renew 30d</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card" style="margin-bottom: var(--space-5);"><i class="fa-solid fa-file-invoice"></i><p>No subscriptions yet.</p></div>
+{% endif %}
+
+{% if unsubscribed_orgs %}
+    <h2 style="font-size:1rem; margin-bottom: var(--space-3);">Organizations Without a Plan</h2>
+    {% for org in unsubscribed_orgs %}
+        <div class="list-item">
+            <div class="list-item__icon"><i class="fa-solid fa-building"></i></div>
+            <div class="list-item__body"><div class="list-item__title">{{ org.name }}</div></div>
+            <a href="{% url 'dashboard:subscription_assign' org_pk=org.pk %}" class="btn btn-primary">Assign Plan</a>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}

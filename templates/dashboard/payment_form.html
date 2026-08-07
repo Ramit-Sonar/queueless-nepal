@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Record Payment — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* payment_form.html — page-specific liquid-glass polish */
+    .card {
+        animation: pf-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .card:nth-of-type(2) { animation-delay: 0.1s; }
+
+    .form-group {
+        animation: pf-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .form-group:nth-of-type(1) { animation-delay: 0.06s; }
+    .form-group:nth-of-type(2) { animation-delay: 0.11s; }
+    .form-group:nth-of-type(3) { animation-delay: 0.16s; }
+    .form-group:nth-of-type(4) { animation-delay: 0.21s; }
+
+    @keyframes pf-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pf-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Record Payment</h1>
+<p style="color: var(--color-text-secondary); font-size:0.88rem; margin-top:-12px; margin-bottom: var(--space-4);">
+    Logs a payment that's already been received (e.g. via eSewa/Khalti/bank transfer) against an organization's subscription.
+</p>
+
+<div class="card" style="max-width: 480px;">
+    {% if form.non_field_errors %}
+        <ul class="form-error-list">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Organization</label>
+            {{ form.organization|add_class:"form-control" }}
+            <div class="form-help">Only organizations with an assigned subscription plan appear here.</div>
+            {% for error in form.organization.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Amount (NPR)</label>
+            {{ form.amount|add_class:"form-control" }}
+            {% for error in form.amount.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Provider</label>
+            {{ form.provider|add_class:"form-control" }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Notes <span style="font-weight:400; color: var(--color-text-secondary);">(optional)</span></label>
+            {{ form.notes|add_class:"form-control" }}
+        </div>
+        <div class="form-row">
+            <a href="{% url 'dashboard:payments' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Record Payment</button>
+        </div>
+    </form>
+</div>
+
+{% if unsubscribed_orgs %}
+    <div class="card" style="max-width: 480px; margin-top: var(--space-4);">
+        <p style="font-weight:600; font-size:0.88rem; margin-bottom: var(--space-3);">
+            <i class="fa-solid fa-circle-info" style="color: var(--color-warning);"></i> Not showing up above?
+        </p>
+        <p style="color: var(--color-text-secondary); font-size:0.85rem; margin-bottom: var(--space-3);">
+            These organizations don't have a subscription plan yet, so there's nothing to bill against. Assign one first:
+        </p>
+        {% for org in unsubscribed_orgs %}
+            <div class="list-item" style="margin-bottom: var(--space-2); padding: var(--space-3);">
+                <div class="list-item__body"><div class="list-item__title" style="font-size:0.9rem;">{{ org.name }}</div></div>
+                <a href="{% url 'dashboard:subscription_assign' org_pk=org.pk %}" class="btn btn-outline">Assign Plan</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

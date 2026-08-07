@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Services — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* service_list.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: svl-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .list-item {
+        animation: svl-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .list-item:nth-child(1) { animation-delay: 0.03s; }
+    .list-item:nth-child(2) { animation-delay: 0.07s; }
+    .list-item:nth-child(3) { animation-delay: 0.11s; }
+    .list-item:nth-child(4) { animation-delay: 0.15s; }
+    .list-item:nth-child(5) { animation-delay: 0.19s; }
+    .list-item:nth-child(6) { animation-delay: 0.23s; }
+
+    .icon-btn {
+        transition: transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
+
+    @keyframes svl-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes svl-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Services</h1>
+    <a href="{% url 'organizations:service_add' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Service</a>
+</div>
+
+{% if services %}
+    {% for service in services %}
+        <div class="list-item">
+            <div class="list-item__icon"><i class="fa-solid fa-list-check"></i></div>
+            <div class="list-item__body">
+                <div class="list-item__title">{{ service.name }}</div>
+                <div class="list-item__meta">
+                    {% if service.department %}<span>{{ service.department.name }}</span>{% endif %}
+                    <span><i class="fa-regular fa-clock"></i> ~{{ service.average_service_minutes }} min</span>
+                    <span>Limit: {{ service.daily_token_limit }}/day</span>
+                    <span class="badge badge-{% if service.is_active %}completed{% else %}cancelled{% endif %}">
+                        {% if service.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="row-actions">
+                <a href="{% url 'organizations:service_edit' pk=service.pk %}" class="icon-btn"><i class="fa-solid fa-pen"></i></a>
+                <form method="post" action="{% url 'organizations:service_delete' pk=service.pk %}" onsubmit="return confirm('Delete this service?');">
+                    {% csrf_token %}
+                    <button type="submit" class="icon-btn icon-btn-danger"><i class="fa-solid fa-trash"></i></button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state card">
+        <i class="fa-solid fa-list-check"></i>
+        <p>No services yet.</p>
+        <a href="{% url 'organizations:service_add' %}" class="btn btn-primary" style="margin-top: var(--space-3); display:inline-flex;">
+            <i class="fa-solid fa-plus"></i> Add your first service
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

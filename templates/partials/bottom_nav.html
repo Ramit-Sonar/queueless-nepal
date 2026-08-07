@@ -1,0 +1,49 @@
+<style>
+    /* bottom_nav.html (customer) — internal liquid-glass polish */
+    nav.bottom-nav {
+        animation: bn-slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    nav.bottom-nav .bottom-nav__item i {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    nav.bottom-nav .bottom-nav__item.is-active i {
+        transform: translateY(-2px) scale(1.12);
+    }
+
+    nav.bottom-nav .bottom-nav__item:active {
+        transform: scale(0.94);
+    }
+
+    @keyframes bn-slide-up {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        nav.bottom-nav { animation: none; }
+    }
+</style>
+<nav class="bottom-nav">
+    <a href="{% url 'customers:home' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+    </a>
+    <a href="{% url 'customers:scan' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'scan' %}is-active{% endif %}">
+        <i class="fa-solid fa-qrcode"></i>
+        <span>Scan</span>
+    </a>
+    <a href="{% url 'customers:token_history' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'token_history' %}is-active{% endif %}">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Tokens</span>
+    </a>
+    <a href="{% url 'customers:notifications' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'notifications' %}is-active{% endif %}">
+        <i class="fa-regular fa-bell"></i>
+        <span>Alerts</span>
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}">
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+    </a>
+</nav>

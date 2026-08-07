@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Departments — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* department_list.html — page-specific liquid-glass polish */
+    .card:first-of-type {
+        animation: dl-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    details.card {
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+        animation: dl-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    details.card:nth-of-type(1) { animation-delay: 0.05s; }
+    details.card:nth-of-type(2) { animation-delay: 0.1s; }
+    details.card:nth-of-type(3) { animation-delay: 0.15s; }
+    details.card:nth-of-type(4) { animation-delay: 0.2s; }
+
+    details.card:hover {
+        transform: translateY(-3px);
+    }
+
+    details.card[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    details.card summary::-webkit-details-marker {
+        display: none;
+    }
+
+    @keyframes dl-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes dl-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Departments</h1>
+
+<div class="card" style="margin-bottom: var(--space-5);">
+    <h2 style="font-size:0.92rem; margin-bottom: var(--space-3);">Add a department</h2>
+    <form method="post" novalidate style="display:flex; gap: var(--space-3); flex-wrap:wrap; align-items:flex-end;">
+        {% csrf_token %}
+        <input type="hidden" name="is_active" value="on">
+        <div class="form-group" style="flex:1; min-width:180px; margin-bottom:0;">
+            <label class="form-label" for="{{ form.name.id_for_label }}">Name</label>
+            {{ form.name|add_class:"form-control" }}
+        </div>
+        <div class="form-group" style="flex:2; min-width:220px; margin-bottom:0;">
+            <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description|add_class:"form-control" }}
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+</div>
+
+{% if departments %}
+    {% for department in departments %}
+        <details class="card" style="margin-bottom: var(--space-3); padding: 0;">
+            <summary style="list-style:none; cursor:pointer; padding: var(--space-4); display:flex; align-items:center; gap: var(--space-4);">
+                <div class="list-item__icon" style="margin:0;"><i class="fa-solid fa-sitemap"></i></div>
+                <div class="list-item__body">
+                    <div class="list-item__title">{{ department.name }}</div>
+                    <div class="list-item__meta">{{ department.services.count }} service{{ department.services.count|pluralize }}</div>
+                </div>
+                <span class="badge badge-{% if department.is_active %}completed{% else %}cancelled{% endif %}">
+                    {% if department.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </summary>
+            <div style="padding: 0 var(--space-4) var(--space-4);">
+                <form method="post" action="{% url 'organizations:department_edit' pk=department.pk %}" style="display:flex; gap: var(--space-3); flex-wrap:wrap; align-items:flex-end; margin-bottom: var(--space-3);">
+                    {% csrf_token %}
+                    <div class="form-group" style="flex:1; min-width:160px; margin-bottom:0;">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" value="{{ department.name }}" class="form-control">
+                    </div>
+                    <div class="form-group" style="flex:2; min-width:200px; margin-bottom:0;">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" value="{{ department.description }}" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; display:flex; align-items:center; gap:6px;">
+                        <input type="checkbox" name="is_active" id="active-{{ department.pk }}" {% if department.is_active %}checked{% endif %}>
+                        <label for="active-{{ department.pk }}" style="font-size:0.85rem;">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+                <form method="post" action="{% url 'organizations:department_delete' pk=department.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline" style="color: var(--color-danger); border-color: var(--color-danger);">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </details>
+    {% endfor %}
+{% else %}
+    <div class="empty-state card">
+        <i class="fa-solid fa-sitemap"></i>
+        <p>No departments yet.</p>
+    </div>
+{% endif %}
+{% endblock %}

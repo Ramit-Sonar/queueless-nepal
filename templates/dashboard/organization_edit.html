@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Edit {{ object.name }} — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* organization_edit.html — page-specific liquid-glass polish */
+    .card {
+        animation: oe-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .form-group, .form-row {
+        animation: oe-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes oe-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes oe-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Edit {{ object.name }}</h1>
+
+<div class="card" style="max-width: 640px;">
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Organization name</label>
+            {{ form.name|add_class:"form-control" }}
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                {{ form.category|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">City</label>
+                {{ form.city|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            {{ form.description|add_class:"form-control" }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Address</label>
+            {{ form.address|add_class:"form-control" }}
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Phone number</label>
+                {{ form.phone_number|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                {{ form.email|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Opening time</label>
+                {{ form.opening_time|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Closing time</label>
+                {{ form.closing_time|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-row">
+            <a href="{% url 'dashboard:organizations' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

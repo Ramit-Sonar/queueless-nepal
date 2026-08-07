@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{{ queue.service.name }} — Staff{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* queue_work.html — premium enterprise queue processing redesign */
+
+    .qw-header { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+    .qw-back-link { color: var(--color-text-secondary); font-size:0.85rem; display:inline-flex; align-items:center; gap:6px; margin-bottom: var(--space-2); text-decoration:none; }
+    .qw-clock { font-size: 0.8rem; font-weight: 600; color: var(--color-primary); background: rgba(37, 99, 235, 0.08); padding: 6px 14px; border-radius: var(--radius-full); }
+
+    /* ---------- Stats ---------- */
+    .qw-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+    @media (min-width: 760px) { .qw-stats { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 1150px) { .qw-stats { grid-template-columns: repeat(8, 1fr); } }
+    .qw-stat { animation: qw-fade-up 0.4s ease both; }
+    .qw-stats .qw-stat:nth-child(1) { animation-delay: 0.02s; } .qw-stats .qw-stat:nth-child(2) { animation-delay: 0.04s; }
+    .qw-stats .qw-stat:nth-child(3) { animation-delay: 0.06s; } .qw-stats .qw-stat:nth-child(4) { animation-delay: 0.08s; }
+    .qw-stats .qw-stat:nth-child(5) { animation-delay: 0.1s; } .qw-stats .qw-stat:nth-child(6) { animation-delay: 0.12s; }
+    .qw-stats .qw-stat:nth-child(7) { animation-delay: 0.14s; } .qw-stats .qw-stat:nth-child(8) { animation-delay: 0.16s; }
+    .qw-stat__icon { width: 32px; height: 32px; border-radius: var(--radius-md); background: rgba(37, 99, 235, 0.1); color: var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; margin-bottom: var(--space-2); }
+    .qw-stat__value { font-family: var(--font-heading); font-weight: 700; font-size: 1.3rem; }
+    .qw-stat__label { font-size: 0.68rem; color: var(--color-text-secondary); margin-top: 2px; }
+
+    /* ---------- Layout ---------- */
+    .qw-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: var(--space-5); align-items: start; }
+    @media (max-width: 900px) { .qw-layout { grid-template-columns: 1fr; } }
+
+    /* ---------- Current token card ---------- */
+    .qw-current-card { position: relative; overflow: hidden; margin-bottom: var(--space-5); animation: qw-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .qw-current-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--color-primary), var(--color-accent, #38bdf8)); }
+
+    .qw-token-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
+    .qw-token-number { font-family: var(--font-heading); font-weight: 800; font-size: 2.4rem; background: linear-gradient(135deg, var(--color-primary), var(--color-accent, #38bdf8)); -webkit-background-clip: text; background-clip: text; color: transparent; animation: qw-token-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+    .qw-token-meta { font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 2px; }
+    .qw-badge-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+    .qw-priority-urgent { background: rgba(239, 68, 68, 0.14); color: #b91c1c; }
+    .qw-priority-high { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+
+    #qw-status-badge.badge-called, #qw-status-badge.badge-waiting { animation: qw-badge-pulse 1.5s ease-in-out infinite; }
+
+    .qw-live-timer { font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: var(--color-primary); }
+
+    .qw-customer-row { display: flex; align-items: center; gap: var(--space-3); border-top: 1px solid var(--color-border); padding-top: var(--space-4); margin-bottom: var(--space-4); }
+    .qw-customer-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; flex-shrink: 0; }
+    .qw-customer-name { font-weight: 700; font-size: 1rem; }
+    .qw-customer-contact { font-size: 0.82rem; color: var(--color-text-secondary); }
+
+    .qw-notes-box { background: rgba(37, 99, 235, 0.06); border-radius: var(--radius-md); padding: var(--space-3); font-size: 0.84rem; margin-bottom: var(--space-4); }
+
+    .qw-recent-visits { font-size: 0.8rem; color: var(--color-text-secondary); }
+    .qw-recent-visits li { margin-top: 4px; }
+
+    .qw-action-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+    .qw-action-row form, .qw-action-row > a, .qw-action-row > button { flex: 1; min-width: 150px; }
+    .qw-action-row .btn { width: 100%; }
+    .qw-secondary-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap; }
+    .qw-secondary-actions button, .qw-secondary-actions a { font-size: 0.8rem; flex: 1 1 auto; min-width: 120px; white-space: nowrap; }
+
+    @media (max-width: 480px) {
+        .qw-token-header { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ---------- Journey timeline ---------- */
+    .qw-journey { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+    .qw-journey-step { display: flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: var(--radius-full); background: rgba(37, 99, 235, 0.08); font-size: 0.76rem; font-weight: 600; }
+    .qw-journey-step.is-current { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff; }
+    .qw-journey-arrow { color: var(--color-text-secondary); font-size: 0.75rem; }
+
+    /* ---------- Live queue side panel ---------- */
+    .qw-widget { margin-bottom: var(--space-4); animation: qw-fade-up 0.4s ease both; }
+    .qw-widget-title { font-size: 0.88rem; font-weight: 700; margin-bottom: var(--space-3); display: flex; align-items: center; justify-content: space-between; }
+    .qw-mini-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); font-size: 0.84rem; }
+    .qw-mini-row:last-child { border-bottom: none; }
+    .qw-mini-num { font-weight: 700; color: var(--color-primary); }
+    .qw-mini-meta { color: var(--color-text-secondary); font-size: 0.74rem; }
+
+    /* ---------- Modals ---------- */
+    .qw-modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 300; padding: var(--space-4); }
+    .qw-modal-backdrop.is-open { display: flex; }
+    .qw-modal { background: var(--color-card); border-radius: var(--radius-lg); padding: var(--space-5); max-width: 420px; width: 100%; animation: qw-modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; max-height: 88vh; overflow-y: auto; }
+    .qw-modal h3 { font-size: 1.05rem; margin-bottom: var(--space-3); }
+    .qw-modal-actions { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
+    .qw-modal-actions button, .qw-modal-actions .btn { flex: 1; }
+    .qw-search-select-wrap { position: relative; }
+
+    /* ---------- Success burst ---------- */
+    .qw-success-burst { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 400; pointer-events: none; display: none; }
+    .qw-success-burst.is-active { display: block; }
+    .qw-success-burst i { font-size: 4rem; color: var(--color-success, #10B981); animation: qw-burst-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .qw-confetti-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 50%; left: 50%; animation: qw-confetti 0.8s ease-out forwards; }
+
+    @keyframes qw-fade-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes qw-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes qw-token-pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    @keyframes qw-badge-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); } }
+    @keyframes qw-modal-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @keyframes qw-burst-pop { 0% { opacity: 0; transform: scale(0.5); } 40% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0; transform: scale(1); } }
+    @keyframes qw-confetti { to { transform: translate(var(--dx), var(--dy)) rotate(360deg); opacity: 0; } }
+
+    .table-wrap { animation: qw-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    table.data-table tbody tr { transition: background-color 0.2s ease; }
+    table.data-table tbody tr:hover { background-color: rgba(37, 99, 235, 0.05); }
+
+    @media print {
+        .app-sidebar, .app-header, .bottom-nav, .qw-back-link, .qw-action-row, .qw-secondary-actions, .qw-modal-backdrop { display: none !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #qw-status-badge.badge-called, #qw-status-badge.badge-waiting { animation: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qw-header">
+    <div>
+        <a href="{% url 'staff:dashboard' %}" class="qw-back-link"><i class="fa-solid fa-arrow-left"></i> All queues</a>
+        <h1 class="page-title" style="margin-bottom:0;">{{ queue.service.name }}</h1>
+    </div>
+    <span class="qw-clock" id="qw-clock">—</span>
+</div>
+
+<div class="qw-stats">
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-ticket"></i></div><div class="qw-stat__value">{{ stats.total }}</div><div class="qw-stat__label">Today's Tokens</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-hourglass-half"></i></div><div class="qw-stat__value">{{ stats.waiting }}</div><div class="qw-stat__label">Waiting</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-bullhorn"></i></div><div class="qw-stat__value">{{ stats.called }}</div><div class="qw-stat__label">Called</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-person-walking-arrow-right"></i></div><div class="qw-stat__value">{{ stats.serving }}</div><div class="qw-stat__label">Serving</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-circle-check"></i></div><div class="qw-stat__value">{{ stats.completed }}</div><div class="qw-stat__label">Completed</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-forward"></i></div><div class="qw-stat__value">{{ stats.skipped }}</div><div class="qw-stat__label">Skipped</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-solid fa-xmark"></i></div><div class="qw-stat__value">{{ stats.cancelled }}</div><div class="qw-stat__label">Cancelled</div></div>
+    <div class="card qw-stat"><div class="qw-stat__icon"><i class="fa-regular fa-clock"></i></div><div class="qw-stat__value">{{ stats.avg_service_minutes }}m</div><div class="qw-stat__label">Avg. Service Time</div></div>
+</div>
+
+<div class="qw-layout">
+<div>
+<h2 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em; color: var(--color-text-secondary); margin-bottom: var(--space-3);">Current Customer</h2>
+
+{% if current_token %}
+    <div class="card qw-current-card">
+        <div class="qw-token-header">
+            <div>
+                <div class="qw-token-number">{{ current_token.display_number }}</div>
+                <div class="qw-token-meta" id="qw-status-meta">
+                    {% if current_token.status == 'called' %}Called {{ current_token.called_at|timesince }} ago
+                    {% else %}Serving <span class="qw-live-timer" id="qw-live-timer">0:00</span>{% endif %}
+                </div>
+            </div>
+            <div class="qw-badge-row">
+                {% if current_token.priority == 'urgent' %}<span class="badge qw-priority-urgent"><i class="fa-solid fa-triangle-exclamation"></i> Urgent</span>{% elif current_token.priority == 'high' %}<span class="badge qw-priority-high">High Priority</span>{% endif %}
+                <span id="qw-status-badge" class="badge badge-{{ current_token.status }}">{{ current_token.get_status_display }}</span>
+            </div>
+        </div>
+
+        <div class="qw-customer-row">
+            <div class="qw-customer-avatar">{{ current_token.customer.first_name|default:current_token.customer.username|first|upper }}</div>
+            <div>
+                <div class="qw-customer-name">{{ current_token.customer.get_full_name|default:current_token.customer.username }}</div>
+                {% if current_token.customer.phone_number %}<div class="qw-customer-contact"><i class="fa-solid fa-phone"></i> {{ current_token.customer.phone_number }}</div>{% endif %}
+                {% if current_token.customer.email %}<div class="qw-customer-contact"><i class="fa-solid fa-envelope"></i> {{ current_token.customer.email }}</div>{% endif %}
+            </div>
+        </div>
+
+        {% if current_token.notes %}
+            <div class="qw-notes-box"><i class="fa-regular fa-note-sticky"></i> {{ current_token.notes }}</div>
+        {% endif %}
+
+        {% if recent_visits %}
+            <p style="font-size:0.8rem; color: var(--color-text-secondary); margin-top: var(--space-3);">Recent visits:</p>
+            <ul class="qw-recent-visits" style="list-style:none; margin-top:4px;">
+                {% for visit in recent_visits %}
+                    <li>{{ visit.queue.service.name }} — {{ visit.get_status_display }} ({{ visit.created_at|date:"M j" }})</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if service_journey|length > 1 %}
+            <div class="qw-journey">
+                {% for step in service_journey %}
+                    <span class="qw-journey-step {% if step.pk == current_token.pk %}is-current{% endif %}">{{ step.queue.service.name }}</span>
+                    {% if not forloop.last %}<i class="fa-solid fa-arrow-right qw-journey-arrow"></i>{% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="qw-action-row">
+            {% if current_token.status == 'called' %}
+                <form method="post" action="{% url 'staff:start_service' pk=current_token.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Service</button>
+                </form>
+            {% elif current_token.status == 'serving' %}
+                <form method="post" action="{% url 'staff:complete_token' pk=current_token.pk %}" id="qw-complete-form">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-primary" data-open-modal="qw-complete-modal"><i class="fa-solid fa-check"></i> Complete &amp; Done</button>
+                </form>
+                <button type="button" class="btn btn-outline" data-open-modal="qw-forward-modal"><i class="fa-solid fa-share"></i> Complete &amp; Forward</button>
+            {% endif %}
+        </div>
+
+        <div class="qw-secondary-actions">
+            {% if current_token.status == 'called' %}
+                <button type="button" class="btn btn-outline" data-open-modal="qw-skip-modal"><i class="fa-solid fa-forward"></i> Skip</button>
+            {% endif %}
+            <button type="button" class="btn btn-outline" data-open-modal="qw-cancel-modal" style="color: var(--color-danger); border-color: var(--color-danger);"><i class="fa-solid fa-xmark"></i> Cancel</button>
+            <a href="{% url 'staff:token_receipt_pdf' pk=current_token.pk %}" class="btn btn-outline"><i class="fa-solid fa-print"></i> Print Receipt</a>
+        </div>
+    </div>
+{% else %}
+    <div class="card qw-current-card" style="text-align:center;">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">No one is currently being served.</p>
+        <form method="post" action="{% url 'staff:call_next' pk=queue.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-bullhorn"></i> Call Next Token</button>
+        </form>
+    </div>
+{% endif %}
+
+<h2 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em; color: var(--color-text-secondary); margin: var(--space-5) 0 var(--space-3);">
+    Completed Today ({{ completed_tokens.count }})
+</h2>
+{% if completed_tokens %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Token</th><th>Customer</th><th>Completed at</th><th>Notes</th></tr></thead>
+            <tbody>
+                {% for token in completed_tokens %}
+                    <tr>
+                        <td>{{ token.display_number }}</td>
+                        <td>{{ token.customer.get_full_name|default:token.customer.username }}</td>
+                        <td>{{ token.completed_at|date:"g:i A" }}</td>
+                        <td style="color:var(--color-text-secondary); font-size:0.8rem;">{{ token.notes|default:"—"|truncatechars:40 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-circle-check"></i><p>No completions yet today.</p></div>
+{% endif %}
+</div>
+
+<div>
+    <div class="qw-widget card">
+        <div class="qw-widget-title">Next Waiting <span style="color:var(--color-text-secondary); font-weight:400;">({{ waiting_count }})</span></div>
+        {% for token in waiting_tokens %}
+            <div class="qw-mini-row">
+                <span class="qw-mini-num">{{ token.display_number }}</span>
+                <div style="flex:1;">
+                    <div>{{ token.customer.get_full_name|default:token.customer.username }}</div>
+                    <div class="qw-mini-meta">
+                        {% if token.priority == 'urgent' %}<span style="color:#b91c1c; font-weight:700;">URGENT ·</span>{% elif token.priority == 'high' %}<span style="color:#b45309; font-weight:700;">HIGH ·</span>{% endif %}
+                        booked {{ token.created_at|timesince }} ago
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p style="font-size:0.82rem; color: var(--color-text-secondary);">No customers waiting.</p>
+        {% endfor %}
+    </div>
+
+    {% if skipped_tokens %}
+        <div class="qw-widget card">
+            <div class="qw-widget-title">Skipped</div>
+            {% for token in skipped_tokens %}
+                <div class="qw-mini-row">
+                    <span class="qw-mini-num">{{ token.display_number }}</span>
+                    <div style="flex:1;">{{ token.customer.get_full_name|default:token.customer.username }}</div>
+                    <form method="post" action="{% url 'staff:recall_token' pk=token.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline" style="padding:4px 10px; font-size:0.76rem;">Recall</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <button type="button" class="btn btn-outline btn-block" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Queue Slip</button>
+</div>
+</div>
+
+<!-- Complete & Done confirm modal -->
+<div class="qw-modal-backdrop" id="qw-complete-modal-backdrop" data-modal-id="qw-complete-modal">
+    <div class="qw-modal">
+        <h3>Complete this service?</h3>
+        <p style="font-size:0.86rem; color:var(--color-text-secondary);">This marks {{ current_token.display_number }} as completed and moves on to the next waiting customer.</p>
+        <div class="form-group" style="margin-top: var(--space-3);">
+            <label class="form-label">Remarks (optional)</label>
+            <textarea class="form-control" id="qw-complete-remarks" rows="2" placeholder="Any notes about this visit…"></textarea>
+        </div>
+        <div class="qw-modal-actions">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="button" class="btn btn-primary" id="qw-complete-confirm-btn"><i class="fa-solid fa-check"></i> Yes, Complete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Skip modal -->
+<div class="qw-modal-backdrop" id="qw-skip-modal-backdrop" data-modal-id="qw-skip-modal">
+    <div class="qw-modal">
+        <h3>Skip this customer?</h3>
+        <form method="post" action="{% if current_token %}{% url 'staff:skip_token' pk=current_token.pk %}{% endif %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Reason</label>
+                <select name="reason" class="form-control">
+                    <option value="No response">No Response</option>
+                    <option value="Customer absent">Customer Absent</option>
+                    <option value="Requested skip">Requested Skip</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="qw-modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-forward"></i> Skip</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cancel modal -->
+<div class="qw-modal-backdrop" id="qw-cancel-modal-backdrop" data-modal-id="qw-cancel-modal">
+    <div class="qw-modal">
+        <h3>Cancel this token?</h3>
+        <form method="post" action="{% if current_token %}{% url 'staff:cancel_token' pk=current_token.pk %}{% endif %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Reason</label>
+                <select name="reason" class="form-control">
+                    <option value="Customer request">Customer Request</option>
+                    <option value="Duplicate booking">Duplicate Booking</option>
+                    <option value="Service unavailable">Service Unavailable</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="qw-modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal>Keep Token</button>
+                <button type="submit" class="btn btn-primary" style="background: var(--color-danger);"><i class="fa-solid fa-xmark"></i> Cancel Token</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Forward modal -->
+{% if forward_form %}
+<div class="qw-modal-backdrop" id="qw-forward-modal-backdrop" data-modal-id="qw-forward-modal">
+    <div class="qw-modal">
+        <h3>Forward Customer</h3>
+        <p style="font-size:0.84rem; color:var(--color-text-secondary); margin-bottom: var(--space-3);">
+            {{ current_token.customer.get_full_name|default:current_token.customer.username }} — {{ current_token.display_number }} · currently at {{ queue.service.name }}
+        </p>
+        <form method="post" action="{% url 'staff:transfer_token' pk=current_token.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Forward to service</label>
+                <div class="qw-search-select-wrap">
+                    <input type="text" class="form-control" id="qw-forward-search" placeholder="Search services…" style="margin-bottom:6px;">
+                    {{ forward_form.service|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                {{ forward_form.priority|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                {{ forward_form.reason|add_class:"form-control" }}
+            </div>
+            <div class="qw-modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-share"></i> Forward</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="qw-success-burst" id="qw-success-burst"><i class="fa-solid fa-circle-check"></i></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    // live clock
+    function updateClock() {
+        var el = document.getElementById('qw-clock');
+        if (!el) { return; }
+        var now = new Date();
+        el.textContent = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    // live "serving" timer
+    {% if current_token and current_token.status == 'serving' and current_token.started_at %}
+    (function () {
+        var startedAt = new Date("{{ current_token.started_at|date:'c' }}").getTime();
+        var el = document.getElementById('qw-live-timer');
+        function tick() {
+            if (!el) { return; }
+            var elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+            var mins = Math.floor(elapsed / 60);
+            var secs = elapsed % 60;
+            el.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+    {% endif %}
+
+    // modal open/close
+    function closeAllModals() {
+        document.querySelectorAll('.qw-modal-backdrop').forEach(function (m) { m.classList.remove('is-open'); });
+    }
+    document.querySelectorAll('[data-open-modal]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-open-modal');
+            var backdrop = document.getElementById(id + '-backdrop');
+            if (backdrop) { backdrop.classList.add('is-open'); }
+        });
+    });
+    document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
+        btn.addEventListener('click', closeAllModals);
+    });
+    document.querySelectorAll('.qw-modal-backdrop').forEach(function (backdrop) {
+        backdrop.addEventListener('click', function (e) { if (e.target === backdrop) { closeAllModals(); } });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeAllModals(); } });
+
+    // complete confirm -> inject remarks then submit the real form
+    var completeConfirmBtn = document.getElementById('qw-complete-confirm-btn');
+    if (completeConfirmBtn) {
+        completeConfirmBtn.addEventListener('click', function () {
+            var form = document.getElementById('qw-complete-form');
+            var remarks = document.getElementById('qw-complete-remarks').value;
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'remarks';
+            hidden.value = remarks;
+            form.appendChild(hidden);
+            form.submit();
+        });
+    }
+
+    // forward modal: lightweight client-side search filter over the <select> options
+    var forwardSearch = document.getElementById('qw-forward-search');
+    if (forwardSearch) {
+        var select = forwardSearch.parentElement.querySelector('select');
+        var allOptions = Array.prototype.slice.call(select.options).map(function (o) {
+            return { value: o.value, text: o.text };
+        });
+        forwardSearch.addEventListener('input', function () {
+            var q = forwardSearch.value.toLowerCase();
+            select.innerHTML = '';
+            allOptions.filter(function (o) { return o.text.toLowerCase().indexOf(q) !== -1; }).forEach(function (o) {
+                var opt = document.createElement('option');
+                opt.value = o.value;
+                opt.text = o.text;
+                select.appendChild(opt);
+            });
+        });
+    }
+
+    // success burst on a "marked complete" / "forwarded" flash message
+    var successMessages = document.querySelectorAll('.alert-success, [class*="alert"]');
+    var shouldBurst = false;
+    successMessages.forEach(function (el) {
+        var text = el.textContent || '';
+        if (text.indexOf('complete') !== -1 || text.indexOf('forwarded') !== -1) { shouldBurst = true; }
+    });
+    if (shouldBurst) {
+        var burst = document.getElementById('qw-success-burst');
+        burst.classList.add('is-active');
+        var colors = ['#2563EB', '#38bdf8', '#10B981', '#F59E0B'];
+        for (var i = 0; i < 14; i++) {
+            var dot = document.createElement('span');
+            dot.className = 'qw-confetti-dot';
+            var angle = (Math.PI * 2 * i) / 14;
+            var distance = 70 + Math.random() * 40;
+            dot.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
+            dot.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
+            dot.style.background = colors[i % colors.length];
+            burst.appendChild(dot);
+        }
+        setTimeout(function () { burst.classList.remove('is-active'); burst.innerHTML = '<i class="fa-solid fa-circle-check"></i>'; }, 900);
+    }
+})();
+</script>
+{% endblock %}

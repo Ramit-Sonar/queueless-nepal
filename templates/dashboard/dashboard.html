@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Dashboard — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* dashboard.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: sad-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .kpi-card__icon {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .kpi-card:hover .kpi-card__icon {
+        transform: scale(1.15) rotate(-6deg);
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+    }
+
+    canvas#trend-chart {
+        animation: sad-chart-fade 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+    }
+
+    .list-item {
+        animation: sad-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .list-item:nth-child(1) { animation-delay: 0.03s; }
+    .list-item:nth-child(2) { animation-delay: 0.07s; }
+    .list-item:nth-child(3) { animation-delay: 0.11s; }
+
+    @keyframes sad-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sad-fade-up {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sad-chart-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Platform Dashboard</h1>
+    <a href="{% url 'dashboard:organization_add' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Organization</a>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-building"></i></div>
+        <div class="kpi-card__value">{{ stats.total_organizations }}</div>
+        <div class="kpi-card__label">Organizations</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-users"></i></div>
+        <div class="kpi-card__value">{{ stats.total_customers }}</div>
+        <div class="kpi-card__label">Customers</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-id-badge"></i></div>
+        <div class="kpi-card__value">{{ stats.total_staff }}</div>
+        <div class="kpi-card__label">Staff</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-people-line"></i></div>
+        <div class="kpi-card__value">{{ stats.active_queues }}</div>
+        <div class="kpi-card__label">Active queues today</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="kpi-card__value">NPR {{ stats.revenue_this_month }}</div>
+        <div class="kpi-card__label">Revenue this month</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-card__icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="kpi-card__value">{{ stats.pending_approvals }}</div>
+        <div class="kpi-card__label">Pending approvals</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-5);">
+    <h2 style="font-size:1rem; margin-bottom: var(--space-4);">Tokens booked platform-wide — last 7 days</h2>
+    <canvas id="trend-chart" height="90"></canvas>
+</div>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-5);">
+    <div>
+        <h2 style="font-size:1rem; margin-bottom: var(--space-3);">Subscriptions Expiring Soon</h2>
+        {% if expiring_soon %}
+            {% for sub in expiring_soon %}
+                <div class="list-item">
+                    <div class="list-item__icon"><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-warning);"></i></div>
+                    <div class="list-item__body">
+                        <div class="list-item__title">{{ sub.organization.name }}</div>
+                        <div class="list-item__meta">{{ sub.plan.get_tier_display }} · expires {{ sub.end_date }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state card"><i class="fa-solid fa-circle-check"></i><p>Nothing expiring in the next 7 days.</p></div>
+        {% endif %}
+    </div>
+    <div>
+        <h2 style="font-size:1rem; margin-bottom: var(--space-3);">Recent Activity</h2>
+        {% if recent_activity %}
+            {% for log in recent_activity %}
+                <div class="list-item">
+                    <div class="list-item__icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="list-item__body">
+                        <div class="list-item__title">{{ log.get_action_display }}</div>
+                        <div class="list-item__meta">{{ log.description }} · {{ log.created_at|timesince }} ago</div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state card"><i class="fa-solid fa-clock-rotate-left"></i><p>No activity yet.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    new Chart(document.getElementById('trend-chart'), {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                data: {{ trend_counts|safe }},
+                borderColor: '#2563EB',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#2563EB',
+            }],
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Add Organization — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* organization_create.html — page-specific liquid-glass polish */
+    .card {
+        animation: oc-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .card h2 {
+        position: relative;
+        padding-bottom: var(--space-2);
+    }
+
+    .card h2::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 32px;
+        height: 2px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+        border-radius: var(--radius-full);
+    }
+
+    .form-group, .form-row {
+        animation: oc-fade-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes oc-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes oc-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Add Organization</h1>
+
+<div class="card" style="max-width: 560px;">
+    <p style="color: var(--color-text-secondary); font-size:0.88rem; margin-bottom: var(--space-4);">
+        Creates the organization admin's login and their organization together. It stays pending — invisible to
+        customers — until a subscription plan is assigned and a payment is recorded.
+    </p>
+    {% if form.non_field_errors %}
+        <ul class="form-error-list">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <h2 style="font-size:0.9rem; margin-bottom: var(--space-3);">Organization Admin</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">First name</label>
+                {{ form.first_name|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Last name</label>
+                {{ form.last_name|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Username</label>
+            {{ form.username|add_class:"form-control" }}
+            {% for error in form.username.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            {{ form.email|add_class:"form-control" }}
+            {% for error in form.email.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Phone number</label>
+            {{ form.phone_number|add_class:"form-control" }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Temporary password</label>
+            {{ form.password1|add_class:"form-control" }}
+            {% for error in form.password1.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Confirm password</label>
+            {{ form.password2|add_class:"form-control" }}
+            {% for error in form.password2.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <h2 style="font-size:0.9rem; margin: var(--space-5) 0 var(--space-3);">Organization</h2>
+        <div class="form-group">
+            <label class="form-label">Organization name</label>
+            {{ form.org_name|add_class:"form-control" }}
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                {{ form.org_category|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">City</label>
+                {{ form.org_city|add_class:"form-control" }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <a href="{% url 'dashboard:organizations' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

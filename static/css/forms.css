@@ -1,0 +1,309 @@
+/* Form styling — QueueLess Nepal design system */
+
+.auth-shell {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5);
+    overflow: hidden;
+    background: radial-gradient(560px circle at 12% 8%, rgba(37, 99, 235, 0.16), transparent 60%), radial-gradient(520px circle at 88% 92%, rgba(56, 189, 248, 0.14), transparent 60%), var(--color-background);
+}
+
+.auth-shell::before,
+.auth-shell::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.auth-shell::before {
+    width: 320px;
+    height: 320px;
+    top: -120px;
+    left: -100px;
+    background: rgba(37, 99, 235, 0.18);
+}
+
+.auth-shell::after {
+    width: 360px;
+    height: 360px;
+    bottom: -140px;
+    right: -110px;
+    background: rgba(56, 189, 248, 0.16);
+}
+
+.auth-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    animation: auth-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes auth-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.auth-card__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-6);
+}
+
+.auth-card__brand-icon {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 16px rgba(37, 99, 235, 0.3));
+}
+
+
+/* The form panel itself — scoped to the auth shell so the app-wide .card is untouched */
+
+.auth-card .card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-card .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+
+.auth-card--restricted .card::before {
+    background: linear-gradient(90deg, var(--color-dark), var(--color-danger));
+}
+
+.auth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0 auto var(--space-4);
+}
+
+.auth-badge--restricted {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.auth-badge--business {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--color-primary-dark);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.auth-badge-row {
+    display: flex;
+    justify-content: center;
+}
+
+.auth-card h1 {
+    font-size: 1.3rem;
+    text-align: center;
+    margin-bottom: var(--space-2);
+}
+
+.auth-card__subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-5);
+    font-size: 0.9rem;
+}
+
+.auth-card__footer {
+    text-align: center;
+    margin-top: var(--space-5);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.auth-card__footer a {
+    position: relative;
+    color: var(--color-primary);
+    font-weight: 600;
+    transition: color 0.15s ease;
+}
+
+.auth-card__footer a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 100%;
+    bottom: -2px;
+    height: 1.5px;
+    background: currentColor;
+    transition: right 0.2s ease;
+}
+
+.auth-card__footer a:hover {
+    color: var(--color-primary-dark);
+}
+
+.auth-card__footer a:hover::after {
+    right: 0;
+}
+
+
+/* Small responsive two-column row (e.g. first/last name) that stacks on narrow screens */
+
+.form-row {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.form-row>* {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 420px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+.form-group {
+    margin-bottom: var(--space-4);
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: var(--space-2);
+    color: var(--color-text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.form-control:hover {
+    border-color: rgba(37, 99, 235, 0.4);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-help {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    margin-top: var(--space-1);
+}
+
+.form-error {
+    font-size: 0.78rem;
+    color: var(--color-danger);
+    margin-top: var(--space-1);
+}
+
+.form-error-list {
+    list-style: none;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--color-danger);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    font-size: 0.85rem;
+    animation: form-error-shake 0.4s ease;
+}
+
+@keyframes form-error-shake {
+    10%,
+    90% {
+        transform: translateX(-1px);
+    }
+    20%,
+    80% {
+        transform: translateX(2px);
+    }
+    30%,
+    50%,
+    70% {
+        transform: translateX(-4px);
+    }
+    40%,
+    60% {
+        transform: translateX(4px);
+    }
+}
+
+.alert {
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    font-size: 0.88rem;
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.alert-info {
+    background: rgba(56, 189, 248, 0.12);
+    color: #0369a1;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-block {
+    width: 100%;
+}

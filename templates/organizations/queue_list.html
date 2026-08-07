@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Queues — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* queue_list.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: ql-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .table-wrap {
+        animation: ql-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    .icon-btn {
+        transition: transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
+
+    @keyframes ql-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes ql-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Queues</h1>
+    <a href="{% url 'organizations:queue_add' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Open a Queue</a>
+</div>
+
+{% if queues %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Tokens</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for queue in queues %}
+                    <tr>
+                        <td>{{ queue.service.name }}</td>
+                        <td>{{ queue.queue_date }}</td>
+                        <td><span class="badge badge-{% if queue.status == 'open' %}completed{% else %}cancelled{% endif %}">{{ queue.get_status_display }}</span></td>
+                        <td>{{ queue.get_priority_display }}</td>
+                        <td>{{ queue.last_token_number }}</td>
+                        <td>
+                            <div class="row-actions">
+                                <a href="{% url 'organizations:queue_edit' pk=queue.pk %}" class="icon-btn"><i class="fa-solid fa-pen"></i></a>
+                                <form method="post" action="{% url 'organizations:queue_delete' pk=queue.pk %}" onsubmit="return confirm('Delete this queue?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="icon-btn icon-btn-danger"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card">
+        <i class="fa-solid fa-people-line"></i>
+        <p>No queues yet.</p>
+        <a href="{% url 'organizations:queue_add' %}" class="btn btn-primary" style="margin-top: var(--space-3); display:inline-flex;">
+            <i class="fa-solid fa-plus"></i> Open your first queue
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

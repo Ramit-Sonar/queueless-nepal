@@ -1,0 +1,779 @@
+{% extends "base.html" %}
+
+{% block title %}Home — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* customers/home.html — premium dashboard redesign
+       (global glass/3D-shadow/Poppins theme lives in base.html; this
+       layer adds this page's own layout + animated touches on top of it) */
+
+    /* ---------- Hero ---------- */
+    .dash-hero {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-5);
+        padding: var(--space-6) var(--space-6);
+        margin-bottom: var(--space-5);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(56, 189, 248, 0.06)) !important;
+        border: 1px solid rgba(37, 99, 235, 0.14);
+        animation: dh-fade-down 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .dash-hero__blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(50px);
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .dash-hero__blob--1 { width: 220px; height: 220px; top: -90px; right: 10%; background: rgba(37, 99, 235, 0.25); animation: dh-blob-float 12s ease-in-out infinite; }
+    .dash-hero__blob--2 { width: 160px; height: 160px; bottom: -70px; left: 30%; background: rgba(56, 189, 248, 0.22); animation: dh-blob-float 14s ease-in-out infinite reverse; }
+
+    .dash-hero__content { position: relative; z-index: 1; }
+
+    .dash-hero__greeting {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin: 0;
+    }
+
+    .dash-hero__wave {
+        display: inline-block;
+        animation: dh-wave 1.8s ease-in-out infinite;
+        transform-origin: 70% 70%;
+    }
+
+    .dash-hero__subtitle {
+        color: var(--color-text-secondary);
+        margin-top: var(--space-2);
+        max-width: 460px;
+        font-size: 0.92rem;
+    }
+
+    .dash-hero__clock {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: var(--space-3);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-primary);
+        background: rgba(255, 255, 255, 0.6);
+        padding: 6px 12px;
+        border-radius: var(--radius-full);
+    }
+
+    .dash-hero__illustration {
+        position: relative;
+        z-index: 1;
+        width: 96px;
+        height: 96px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 2.4rem;
+        box-shadow: 0 16px 34px rgba(37, 99, 235, 0.35);
+        flex-shrink: 0;
+        animation: dh-icon-float 3.4s ease-in-out infinite;
+    }
+
+    @media (max-width: 640px) {
+        .dash-hero { flex-direction: column; align-items: flex-start; padding: var(--space-5); }
+        .dash-hero__illustration { width: 64px; height: 64px; font-size: 1.7rem; }
+    }
+
+    /* ---------- Stats ---------- */
+    .dash-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
+        margin-bottom: var(--space-5);
+    }
+
+    @media (min-width: 700px) {
+        .dash-stats { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .dash-stat {
+        position: relative;
+        overflow: hidden;
+        animation: dh-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .dash-stats .dash-stat:nth-child(1) { animation-delay: 0.04s; }
+    .dash-stats .dash-stat:nth-child(2) { animation-delay: 0.08s; }
+    .dash-stats .dash-stat:nth-child(3) { animation-delay: 0.12s; }
+    .dash-stats .dash-stat:nth-child(4) { animation-delay: 0.16s; }
+
+    .dash-stat__icon {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius-md);
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-bottom: var(--space-3);
+    }
+
+    .dash-stat__value {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        font-size: 1.55rem;
+        color: var(--color-text-primary);
+    }
+
+    .dash-stat__label {
+        font-size: 0.78rem;
+        color: var(--color-text-secondary);
+        margin-top: 2px;
+    }
+
+    /* ---------- Quick actions ---------- */
+    .dash-quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
+        margin-bottom: var(--space-5);
+    }
+
+    @media (min-width: 560px) {
+        .dash-quick-actions { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+        .dash-quick-actions { grid-template-columns: repeat(6, 1fr); }
+    }
+
+    .dash-quick-actions .card {
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        animation: dh-fade-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .dash-quick-actions .card:nth-child(1) { animation-delay: 0.05s; }
+    .dash-quick-actions .card:nth-child(2) { animation-delay: 0.09s; }
+    .dash-quick-actions .card:nth-child(3) { animation-delay: 0.13s; }
+    .dash-quick-actions .card:nth-child(4) { animation-delay: 0.17s; }
+    .dash-quick-actions .card:nth-child(5) { animation-delay: 0.21s; }
+    .dash-quick-actions .card:nth-child(6) { animation-delay: 0.25s; }
+
+    .dash-quick-actions .card:hover {
+        transform: translateY(-6px) scale(1.02);
+    }
+
+    .dash-quick-actions i.dash-qa-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(56, 189, 248, 0.12));
+        color: var(--color-primary);
+        font-size: 1.25rem;
+        margin: 0 auto var(--space-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+    }
+
+    .dash-quick-actions .card:hover i.dash-qa-icon {
+        transform: scale(1.15) rotate(-6deg);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        color: #fff;
+    }
+
+    .dash-qa-title { display: block; font-weight: 600; font-size: 0.86rem; }
+    .dash-qa-desc { display: block; font-size: 0.72rem; color: var(--color-text-secondary); margin-top: 2px; }
+
+    .dash-qa-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--color-danger);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: var(--radius-full);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+    }
+
+    /* ---------- Active token ---------- */
+    .dash-active-token {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: var(--space-5);
+        animation: dh-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .dash-active-token::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent, #38bdf8));
+    }
+
+    .dash-at-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-3);
+        flex-wrap: wrap;
+        margin-bottom: var(--space-4);
+    }
+
+    .dash-at-org { font-weight: 700; font-size: 1.02rem; }
+    .dash-at-meta { color: var(--color-text-secondary); font-size: 0.84rem; margin-top: 2px; }
+
+    .dash-at-body {
+        display: flex;
+        align-items: center;
+        gap: var(--space-5);
+        flex-wrap: wrap;
+    }
+
+    .dash-at-number {
+        font-family: var(--font-heading);
+        font-weight: 800;
+        font-size: 2.6rem;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-accent, #38bdf8));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: dh-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    .dash-at-qr {
+        width: 76px;
+        height: 76px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+        padding: 4px;
+        background: #fff;
+        flex-shrink: 0;
+    }
+
+    .dash-at-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-3);
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .dash-at-stat { text-align: center; }
+    .dash-at-stat-value { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; }
+    .dash-at-stat-label { font-size: 0.72rem; color: var(--color-text-secondary); margin-top: 2px; }
+
+    .dash-at-progress-wrap {
+        margin-top: var(--space-4);
+    }
+
+    .dash-at-progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.76rem;
+        color: var(--color-text-secondary);
+        margin-bottom: 6px;
+    }
+
+    .dash-at-progress-track {
+        height: 8px;
+        border-radius: var(--radius-full);
+        background: rgba(37, 99, 235, 0.1);
+        overflow: hidden;
+    }
+
+    .dash-at-progress-fill {
+        height: 100%;
+        border-radius: var(--radius-full);
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent, #38bdf8));
+        width: 0;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dash-at-actions {
+        display: flex;
+        gap: var(--space-3);
+        margin-top: var(--space-5);
+        flex-wrap: wrap;
+    }
+
+    .dash-at-actions form,
+    .dash-at-actions a { flex: 1; min-width: 140px; }
+
+    #dash-status-badge.badge-called,
+    #dash-status-badge.badge-waiting {
+        animation: dh-badge-pulse 1.5s ease-in-out infinite;
+    }
+
+    /* ---------- Two-column layout ---------- */
+    .dash-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+        gap: var(--space-5);
+        align-items: start;
+    }
+
+    @media (max-width: 860px) {
+        .dash-layout { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- Recent activity timeline ---------- */
+    .dash-timeline { position: relative; padding-left: 28px; }
+
+    .dash-timeline::before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: var(--color-border);
+    }
+
+    .dash-timeline-item {
+        position: relative;
+        padding-bottom: var(--space-4);
+        animation: dh-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .dash-timeline-item:nth-child(1) { animation-delay: 0.04s; }
+    .dash-timeline-item:nth-child(2) { animation-delay: 0.08s; }
+    .dash-timeline-item:nth-child(3) { animation-delay: 0.12s; }
+    .dash-timeline-item:nth-child(4) { animation-delay: 0.16s; }
+    .dash-timeline-item:nth-child(5) { animation-delay: 0.2s; }
+    .dash-timeline-item:nth-child(6) { animation-delay: 0.24s; }
+
+    .dash-timeline-item:last-child { padding-bottom: 0; }
+
+    .dash-timeline-dot {
+        position: absolute;
+        left: -28px;
+        top: 2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--color-card);
+        border: 2px solid var(--color-primary);
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+    }
+
+    .dash-timeline-title { font-weight: 600; font-size: 0.88rem; }
+    .dash-timeline-meta { font-size: 0.76rem; color: var(--color-text-secondary); margin-top: 1px; }
+
+    /* ---------- Sidebar widgets ---------- */
+    .dash-widget { margin-bottom: var(--space-4); animation: dh-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .dash-widget-title { font-size: 0.88rem; font-weight: 700; margin-bottom: var(--space-3); display: flex; align-items: center; justify-content: space-between; }
+    .dash-widget-title a { font-size: 0.76rem; font-weight: 600; color: var(--color-primary); }
+
+    .dash-office-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) 0;
+        border-bottom: 1px solid var(--color-border);
+        text-decoration: none;
+    }
+
+    .dash-office-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .dash-office-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.85rem;
+    }
+
+    .dash-office-name { font-weight: 600; font-size: 0.85rem; }
+    .dash-office-meta { font-size: 0.72rem; color: var(--color-text-secondary); margin-top: 1px; }
+
+    .dash-notif-row { display: flex; gap: var(--space-2); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+    .dash-notif-row:last-child { border-bottom: none; }
+    .dash-notif-icon { width: 30px; height: 30px; border-radius: 50%; background: rgba(37, 99, 235, 0.1); color: var(--color-primary); display:flex; align-items:center; justify-content:center; font-size:0.72rem; flex-shrink:0; }
+    .dash-notif-title { font-size: 0.82rem; font-weight: 600; }
+    .dash-notif-meta { font-size: 0.72rem; color: var(--color-text-secondary); }
+
+    .dash-profile-widget { display: flex; align-items: center; gap: var(--space-3); }
+
+    .dash-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .dash-profile-name { font-weight: 700; font-size: 0.92rem; }
+    .dash-profile-meta { font-size: 0.76rem; color: var(--color-text-secondary); }
+
+    @keyframes dh-fade-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes dh-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes dh-pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    @keyframes dh-wave { 0%, 100% { transform: rotate(0deg); } 15% { transform: rotate(16deg); } 30% { transform: rotate(-8deg); } 45% { transform: rotate(12deg); } 60% { transform: rotate(0deg); } }
+    @keyframes dh-icon-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(-4deg); } }
+    @keyframes dh-blob-float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(14px, -10px) scale(1.08); } }
+    @keyframes dh-badge-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dash-hero__wave, .dash-hero__illustration, .dash-hero__blob, .dash-hero__blob--2 { animation: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card dash-hero">
+    <div class="dash-hero__blob dash-hero__blob--1"></div>
+    <div class="dash-hero__blob dash-hero__blob--2"></div>
+    <div class="dash-hero__content">
+        <h1 class="page-title dash-hero__greeting">
+            <span class="dash-hero__wave" aria-hidden="true">👋</span> {{ greeting }}, {{ user.first_name|default:user.username }}
+        </h1>
+        <p class="dash-hero__subtitle">Welcome back to QueueLess Nepal. Avoid long queues — manage your government and business service tokens digitally.</p>
+        <span class="dash-hero__clock"><i class="fa-regular fa-clock"></i> <span id="dash-clock">—</span></span>
+    </div>
+    <div class="dash-hero__illustration"><i class="fa-solid fa-ticket"></i></div>
+</div>
+
+<div class="dash-stats">
+    <div class="card dash-stat">
+        <div class="dash-stat__icon"><i class="fa-solid fa-ticket"></i></div>
+        <div class="dash-stat__value" data-counter="{{ stats.active_count }}">0</div>
+        <div class="dash-stat__label">Active Tokens</div>
+    </div>
+    <div class="card dash-stat">
+        <div class="dash-stat__icon"><i class="fa-regular fa-clock"></i></div>
+        <div class="dash-stat__value">{% if primary_token %}{{ primary_token.estimated_wait_minutes }}m{% else %}—{% endif %}</div>
+        <div class="dash-stat__label">Waiting Time</div>
+    </div>
+    <div class="card dash-stat">
+        <div class="dash-stat__icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="dash-stat__value" data-counter="{{ stats.completed_count }}">0</div>
+        <div class="dash-stat__label">Completed Services</div>
+    </div>
+    <div class="card dash-stat">
+        <div class="dash-stat__icon"><i class="fa-solid fa-heart"></i></div>
+        <div class="dash-stat__value" id="dash-favorites-count">0</div>
+        <div class="dash-stat__label">Favorite Offices</div>
+    </div>
+</div>
+
+<div class="dash-quick-actions">
+    <a href="{% url 'customers:scan' %}" class="card">
+        <i class="fa-solid fa-qrcode dash-qa-icon"></i>
+        <span class="dash-qa-title">Scan QR</span>
+        <span class="dash-qa-desc">Scan a counter code</span>
+    </a>
+    <a href="{% url 'customers:select_organization' %}" class="card">
+        <i class="fa-solid fa-building dash-qa-icon"></i>
+        <span class="dash-qa-title">Browse Offices</span>
+        <span class="dash-qa-desc">Find a service</span>
+    </a>
+    <a href="{% if primary_token %}{% url 'customers:token_detail' pk=primary_token.pk %}{% else %}{% url 'customers:token_history' %}{% endif %}" class="card">
+        <i class="fa-solid fa-list-check dash-qa-icon"></i>
+        <span class="dash-qa-title">My Tokens</span>
+        <span class="dash-qa-desc">{{ stats.active_count }} active now</span>
+        {% if stats.active_count %}<span class="dash-qa-badge" style="display:flex;">{{ stats.active_count }}</span>{% endif %}
+    </a>
+    <a href="{% url 'customers:token_history' %}" class="card">
+        <i class="fa-solid fa-clock-rotate-left dash-qa-icon"></i>
+        <span class="dash-qa-title">Token History</span>
+        <span class="dash-qa-desc">Past visits</span>
+    </a>
+    <a href="{% url 'customers:select_organization' %}" class="card">
+        <i class="fa-solid fa-heart dash-qa-icon"></i>
+        <span class="dash-qa-title">Favorite Offices</span>
+        <span class="dash-qa-desc">Your saved places</span>
+    </a>
+    <a href="#dash-recommended" class="card">
+        <i class="fa-solid fa-location-dot dash-qa-icon"></i>
+        <span class="dash-qa-title">Recommended</span>
+        <span class="dash-qa-desc">Open now, short waits</span>
+    </a>
+</div>
+
+{% if primary_token %}
+<div class="card dash-active-token">
+    <div class="dash-at-header">
+        <div>
+            <div class="dash-at-org">{{ primary_token.queue.service.organization.name }}</div>
+            <div class="dash-at-meta">
+                {{ primary_token.queue.service.name }}{% if primary_token.queue.service.department %} · {{ primary_token.queue.service.department.name }}{% endif %}
+                · Issued {{ primary_token.created_at|time:"g:i A" }}
+            </div>
+        </div>
+        <span id="dash-status-badge" class="badge badge-{{ primary_token.status }}">{{ primary_token.get_status_display }}</span>
+    </div>
+
+    <div class="dash-at-body">
+        <div class="dash-at-number">{{ primary_token.display_number }}</div>
+        <img class="dash-at-qr" src="{% url 'customers:token_qr' pk=primary_token.pk %}" alt="QR code for token {{ primary_token.display_number }}">
+        <div class="dash-at-stats">
+            <div class="dash-at-stat">
+                <div class="dash-at-stat-value" id="dash-position-value">{{ primary_token.position_in_queue }}</div>
+                <div class="dash-at-stat-label">People ahead</div>
+            </div>
+            <div class="dash-at-stat">
+                <div class="dash-at-stat-value" id="dash-eta-value">{{ primary_token.estimated_wait_minutes }}m</div>
+                <div class="dash-at-stat-label">Est. wait</div>
+            </div>
+            <div class="dash-at-stat">
+                <div class="dash-at-stat-value" id="dash-serving-value">{{ primary_token.queue.currently_serving.display_number|default:"—" }}</div>
+                <div class="dash-at-stat-label">Now serving</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-at-progress-wrap">
+        <div class="dash-at-progress-label">
+            <span>Today's queue progress</span>
+            <span>{{ primary_token.queue.completed_tokens_today.count }} of {{ primary_token.queue.last_token_number }} served</span>
+        </div>
+        <div class="dash-at-progress-track">
+            <div class="dash-at-progress-fill" id="dash-progress-fill" data-progress="{{ queue_progress_pct }}"></div>
+        </div>
+    </div>
+
+    <div class="dash-at-actions">
+        <a href="{% url 'customers:token_detail' pk=primary_token.pk %}" class="btn btn-primary"><i class="fa-solid fa-eye"></i> View Details</a>
+        <form method="post" action="{% url 'customers:cancel_token' pk=primary_token.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-block" style="color: var(--color-danger); border-color: var(--color-danger);">
+                <i class="fa-solid fa-xmark"></i> Cancel Token
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="dash-layout">
+    <div>
+        <h2 style="font-size:1rem; margin-bottom: var(--space-3);">Recent Activity</h2>
+        {% if recent_activity %}
+            <div class="card">
+                <div class="dash-timeline">
+                    {% for token in recent_activity %}
+                        <div class="dash-timeline-item">
+                            <span class="dash-timeline-dot">
+                                {% if token.status == 'completed' %}<i class="fa-solid fa-check"></i>
+                                {% elif token.status == 'cancelled' %}<i class="fa-solid fa-xmark"></i>
+                                {% elif token.status == 'no_show' %}<i class="fa-solid fa-ban"></i>
+                                {% else %}<i class="fa-solid fa-ticket"></i>{% endif %}
+                            </span>
+                            <div class="dash-timeline-title">
+                                {% if token.status == 'completed' %}Service completed
+                                {% elif token.status == 'cancelled' %}Token cancelled
+                                {% elif token.status == 'no_show' %}Marked as no-show
+                                {% else %}Token booked{% endif %}
+                                — {{ token.display_number }}
+                            </div>
+                            <div class="dash-timeline-meta">{{ token.queue.service.name }} · {{ token.queue.service.organization.name }} · {{ token.created_at|timesince }} ago</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state card">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <p>No activity yet. Book your first token to get started.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div>
+        <div class="dash-widget card">
+            <div class="dash-widget-title">Profile</div>
+            <div class="dash-profile-widget">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="" class="dash-avatar">
+                {% else %}
+                    <div class="dash-avatar">{{ user.first_name|default:user.username|first|upper }}</div>
+                {% endif %}
+                <div>
+                    <div class="dash-profile-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="dash-profile-meta">{{ user.phone_number|default:"No phone on file" }}</div>
+                    <div class="dash-profile-meta">{{ user.email }}</div>
+                </div>
+            </div>
+            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline btn-block" style="margin-top: var(--space-3);">
+                <i class="fa-solid fa-pen"></i> Edit Profile
+            </a>
+        </div>
+
+        <div id="dash-recommended" class="dash-widget card">
+            <div class="dash-widget-title">Recommended Offices <a href="{% url 'customers:select_organization' %}">See all</a></div>
+            {% for org in recommended_organizations %}
+                <a href="{% url 'customers:select_service' slug=org.slug %}" class="dash-office-row">
+                    <div class="dash-office-icon">
+                        {% if org.category == 'hospital' %}<i class="fa-solid fa-hospital"></i>
+                        {% elif org.category == 'bank' %}<i class="fa-solid fa-building-columns"></i>
+                        {% elif org.category == 'government' %}<i class="fa-solid fa-landmark"></i>
+                        {% elif org.category == 'education' %}<i class="fa-solid fa-graduation-cap"></i>
+                        {% else %}<i class="fa-solid fa-shop"></i>{% endif %}
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="dash-office-name">{{ org.name }}</div>
+                        <div class="dash-office-meta">
+                            {% if org.is_open %}<span style="color: var(--color-success, #16a34a);">Open</span>{% else %}<span style="color: var(--color-text-secondary);">Closed</span>{% endif %}
+                            · {{ org.waiting_count }} waiting
+                        </div>
+                    </div>
+                </a>
+            {% empty %}
+                <p style="font-size:0.82rem; color: var(--color-text-secondary);">No organizations available yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="dash-widget card">
+            <div class="dash-widget-title">Notifications <a href="{% url 'customers:notifications' %}">View all</a></div>
+            {% for notif in recent_notifications %}
+                <div class="dash-notif-row">
+                    <div class="dash-notif-icon">
+                        {% if notif.notification_type == 'token_called' %}<i class="fa-solid fa-bullhorn"></i>
+                        {% elif notif.notification_type == 'token_completed' %}<i class="fa-solid fa-circle-check"></i>
+                        {% elif notif.notification_type == 'queue_update' %}<i class="fa-solid fa-people-line"></i>
+                        {% else %}<i class="fa-regular fa-bell"></i>{% endif %}
+                    </div>
+                    <div>
+                        <div class="dash-notif-title">{{ notif.title }}</div>
+                        <div class="dash-notif-meta">{{ notif.message }} · {{ notif.created_at|timesince }} ago</div>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="font-size:0.82rem; color: var(--color-text-secondary);">You're all caught up.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    // live clock
+    function updateClock() {
+        var el = document.getElementById('dash-clock');
+        if (!el) { return; }
+        var now = new Date();
+        var dateStr = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+        var timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        el.textContent = dateStr + ' · ' + timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    // animated stat counters
+    function animateCounter(el) {
+        var target = parseFloat(el.getAttribute('data-counter'));
+        if (isNaN(target)) { return; }
+        var duration = 800;
+        var startTime = null;
+        function step(ts) {
+            if (!startTime) { startTime = ts; }
+            var progress = Math.min((ts - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(target * eased);
+            if (progress < 1) { requestAnimationFrame(step); }
+        }
+        requestAnimationFrame(step);
+    }
+    if ('IntersectionObserver' in window) {
+        var counterObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    animateCounter(entry.target);
+                    counterObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.4 });
+        document.querySelectorAll('[data-counter]').forEach(function (el) { counterObserver.observe(el); });
+    } else {
+        document.querySelectorAll('[data-counter]').forEach(function (el) { el.textContent = el.getAttribute('data-counter'); });
+    }
+
+    // favorites count, read from the same localStorage key used on the Browse Offices page
+    try {
+        var favorites = JSON.parse(localStorage.getItem('qless_favorite_orgs') || '[]');
+        var favEl = document.getElementById('dash-favorites-count');
+        if (favEl) { favEl.textContent = Array.isArray(favorites) ? favorites.length : 0; }
+    } catch (e) { /* ignore malformed storage */ }
+
+    // queue progress bar fill-in
+    var progressFill = document.getElementById('dash-progress-fill');
+    if (progressFill) {
+        var pct = progressFill.getAttribute('data-progress') || 0;
+        requestAnimationFrame(function () {
+            setTimeout(function () { progressFill.style.width = pct + '%'; }, 150);
+        });
+    }
+
+    // live poll the active token, same pattern as the token detail page
+    {% if primary_token and primary_token.status in primary_token.ACTIVE_STATUSES %}
+    (function () {
+        var statusUrl = "{% url 'customers:token_status_json' pk=primary_token.pk %}";
+        var badge = document.getElementById('dash-status-badge');
+        var positionEl = document.getElementById('dash-position-value');
+        var etaEl = document.getElementById('dash-eta-value');
+        var servingEl = document.getElementById('dash-serving-value');
+
+        function poll() {
+            fetch(statusUrl)
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (positionEl) { positionEl.textContent = data.position_in_queue; }
+                    if (etaEl) { etaEl.textContent = data.estimated_wait_minutes + 'm'; }
+                    if (servingEl) { servingEl.textContent = data.currently_serving || '—'; }
+                    if (badge && badge.textContent.trim() !== data.status_display) {
+                        badge.textContent = data.status_display;
+                        badge.className = 'badge badge-' + data.status;
+                    }
+                    if (['waiting', 'called', 'serving'].indexOf(data.status) === -1) {
+                        window.location.reload();
+                        return;
+                    }
+                    setTimeout(poll, 8000);
+                })
+                .catch(function () { setTimeout(poll, 8000); });
+        }
+        setTimeout(poll, 8000);
+    })();
+    {% endif %}
+})();
+</script>
+{% endblock %}

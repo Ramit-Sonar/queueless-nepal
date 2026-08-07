@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Staff{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* staff/dashboard.html — page-specific liquid-glass polish */
+    .page-title {
+        animation: sd-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    /* Featured CTA — built on the standard .list-item component (guaranteed-correct
+       flex/alignment) with an extra gradient-accent treatment layered on top so it
+       reads as the primary action, distinct from a plain queue row. */
+    .sd-book-cta {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: var(--space-5);
+        border: 1px solid rgba(37, 99, 235, 0.2) !important;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.07), rgba(56, 189, 248, 0.07)) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+    }
+
+    .sd-book-cta::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent, #38bdf8));
+    }
+
+    .sd-book-cta:hover {
+        transform: translateY(-4px);
+        border-color: rgba(37, 99, 235, 0.4) !important;
+        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.2) !important;
+    }
+
+    .sd-book-cta__icon {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)) !important;
+        color: #fff !important;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+        animation: sd-cta-icon-float 2.6s ease-in-out infinite;
+    }
+
+    .sd-book-cta__chevron {
+        color: var(--color-primary) !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sd-book-cta:hover .sd-book-cta__chevron {
+        transform: translateX(5px);
+    }
+
+    @keyframes sd-cta-icon-float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-3px) rotate(-5deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sd-book-cta__icon { animation: none; }
+    }
+
+    a.list-item {
+        animation: sd-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    a.list-item:nth-child(1) { animation-delay: 0.04s; }
+    a.list-item:nth-child(2) { animation-delay: 0.08s; }
+    a.list-item:nth-child(3) { animation-delay: 0.12s; }
+    a.list-item:nth-child(4) { animation-delay: 0.16s; }
+    a.list-item:nth-child(5) { animation-delay: 0.2s; }
+
+    @keyframes sd-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sd-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Hi, {{ user.first_name|default:user.username }}</h1>
+<p style="color: var(--color-text-secondary); font-size:0.88rem; margin-top:-12px; margin-bottom: var(--space-4);">
+    {% if staff_profile.department %}{{ staff_profile.department.name }} · {% endif %}
+    {% if staff_profile.counter_number %}Counter {{ staff_profile.counter_number }}{% endif %}
+</p>
+
+<a href="{% url 'staff:book_token' %}" class="list-item sd-book-cta">
+    <div class="list-item__icon sd-book-cta__icon"><i class="fa-solid fa-ticket"></i></div>
+    <div class="list-item__body">
+        <div class="list-item__title">Book a Token</div>
+        <div class="list-item__meta">For walk-in customers without the app</div>
+    </div>
+    <i class="fa-solid fa-chevron-right sd-book-cta__chevron"></i>
+</a>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Today's Queues</h2>
+
+{% if queues %}
+    {% for queue in queues %}
+        <a href="{% url 'staff:queue_work' pk=queue.pk %}" class="list-item" style="text-decoration:none;">
+            <div class="list-item__icon"><i class="fa-solid fa-people-line"></i></div>
+            <div class="list-item__body">
+                <div class="list-item__title">{{ queue.service.name }}</div>
+                <div class="list-item__meta">
+                    <span>{{ queue.waiting_tokens.count }} waiting</span>
+                    <span>· {{ queue.completed_tokens_today.count }} completed</span>
+                    {% if queue.currently_serving %}<span>· Now serving {{ queue.currently_serving.display_number }}</span>{% endif %}
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: var(--color-text-secondary);"></i>
+        </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state card">
+        <i class="fa-solid fa-people-line"></i>
+        <p>No open queues for you right now. Check back once your organization opens one.</p>
+    </div>
+{% endif %}
+{% endblock %}

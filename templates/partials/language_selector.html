@@ -1,0 +1,111 @@
+<style>
+    /* language_selector.html — Google-Translate-powered EN / नेपाली switcher, self-contained styling */
+    .lang-switcher {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(37, 99, 235, 0.18);
+    }
+
+    .lang-switcher__btn {
+        appearance: none;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 6px 13px;
+        border-radius: 999px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #2563EB;
+        line-height: 1.2;
+        transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .lang-switcher__btn:hover { background: rgba(37, 99, 235, 0.14); }
+
+    .lang-switcher__btn.is-active {
+        background: linear-gradient(135deg, #2563EB, #1E3A8A);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+
+    .lang-switcher__btn.is-active:hover { transform: translateY(-1px); }
+
+    /* Google injects its own widget + top banner iframe (current builds use an obfuscated
+       class name, not the classic .goog-te-banner-frame, so target any .skiptranslate iframe)
+       — we keep only the translation engine and drive it entirely through our own EN / ने buttons. */
+    #google_translate_element { display: none !important; }
+    iframe.skiptranslate { display: none !important; }
+    body { top: 0px !important; }
+    #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+    .goog-text-highlight { background: none !important; box-shadow: none !important; }
+    .goog-tooltip, .goog-tooltip:hover { display: none !important; visibility: hidden !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .lang-switcher__btn { transition: none; }
+    }
+</style>
+
+<div class="lang-switcher notranslate" data-lang-switcher role="group" aria-label="Choose language" translate="no">
+    <button type="button" class="lang-switcher__btn" data-lang="en">EN</button>
+    <button type="button" class="lang-switcher__btn" data-lang="ne">ने</button>
+</div>
+<div id="google_translate_element"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    function getCookie(name) {
+        var match = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function currentLang() {
+        return getCookie('googtrans') === '/en/ne' ? 'ne' : 'en';
+    }
+
+    function setLang(lang) {
+        if (lang === currentLang()) { return; }
+        if (lang === 'ne') {
+            document.cookie = 'googtrans=/en/ne; path=/';
+        } else {
+            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+        }
+        window.location.reload();
+    }
+
+    function paintButtons() {
+        var active = currentLang();
+        document.querySelectorAll('[data-lang-switcher] .lang-switcher__btn').forEach(function (btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-lang') === active);
+        });
+    }
+
+    function wireButtons() {
+        document.querySelectorAll('[data-lang-switcher] .lang-switcher__btn').forEach(function (btn) {
+            btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { paintButtons(); wireButtons(); });
+    } else {
+        paintButtons();
+        wireButtons();
+    }
+
+    window.googleTranslateElementInit = function () {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,ne',
+            autoDisplay: false
+        }, 'google_translate_element');
+    };
+})();
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Organizations — Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* organization_list.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: ol-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .search-bar {
+        transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    }
+
+    .search-bar:focus-within {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .chip.is-active {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .list-item {
+        animation: ol-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .list-item:nth-child(1) { animation-delay: 0.03s; }
+    .list-item:nth-child(2) { animation-delay: 0.06s; }
+    .list-item:nth-child(3) { animation-delay: 0.09s; }
+    .list-item:nth-child(4) { animation-delay: 0.12s; }
+    .list-item:nth-child(5) { animation-delay: 0.15s; }
+    .list-item:nth-child(6) { animation-delay: 0.18s; }
+
+    .icon-btn {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+    }
+
+    .icon-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .badge-waiting {
+        animation: ol-badge-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes ol-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes ol-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes ol-badge-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+        50% { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Organizations</h1>
+    <a href="{% url 'dashboard:organization_add' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Organization</a>
+</div>
+
+<form method="get" class="search-bar">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name or city">
+    <input type="hidden" name="status" value="{{ selected_status }}">
+</form>
+
+<div class="chip-row">
+    <a href="?status=&q={{ query }}" class="chip {% if not selected_status %}is-active{% endif %}">All</a>
+    <a href="?status=pending&q={{ query }}" class="chip {% if selected_status == 'pending' %}is-active{% endif %}">Pending ({{ pending_count }})</a>
+    <a href="?status=active&q={{ query }}" class="chip {% if selected_status == 'active' %}is-active{% endif %}">Active</a>
+    <a href="?status=suspended&q={{ query }}" class="chip {% if selected_status == 'suspended' %}is-active{% endif %}">Suspended</a>
+</div>
+
+{% if organizations %}
+    {% for org in organizations %}
+        <div class="list-item">
+            <div class="list-item__icon"><i class="fa-solid fa-building"></i></div>
+            <div class="list-item__body">
+                <div class="list-item__title">{{ org.name }}</div>
+                <div class="list-item__meta">
+                    <span>{{ org.get_category_display }}{% if org.city %} · {{ org.city }}{% endif %}</span>
+                    <span>Owner: {{ org.owner.get_full_name|default:org.owner.username }}</span>
+                    {% if not org.is_approved %}<span class="badge badge-waiting">Pending</span>
+                    {% elif not org.is_active %}<span class="badge badge-cancelled">Suspended</span>
+                    {% else %}<span class="badge badge-completed">Active</span>{% endif %}
+                </div>
+            </div>
+            <div class="row-actions">
+                {% if not org.is_approved %}
+                    <form method="post" action="{% url 'dashboard:organization_approve' pk=org.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Approve</button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'dashboard:organization_edit' pk=org.pk %}" class="icon-btn"><i class="fa-solid fa-pen"></i></a>
+                <form method="post" action="{% url 'dashboard:organization_suspend' pk=org.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="icon-btn" title="{% if org.is_active %}Suspend{% else %}Reactivate{% endif %}">
+                        <i class="fa-solid {% if org.is_active %}fa-ban{% else %}fa-rotate-left{% endif %}"></i>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'dashboard:organization_delete' pk=org.pk %}" onsubmit="return confirm('Delete {{ org.name }}? This cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="icon-btn icon-btn-danger"><i class="fa-solid fa-trash"></i></button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+    {% if is_paginated %}
+        <div style="display:flex; justify-content:center; gap: var(--space-3); margin-top: var(--space-4);">
+            {% if page_obj.has_previous %}<a href="?status={{ selected_status }}&q={{ query }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?status={{ selected_status }}&q={{ query }}&page={{ page_obj.next_page_number }}" class="btn btn-outline">Next</a>{% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-building"></i><p>No organizations found.</p></div>
+{% endif %}
+{% endblock %}

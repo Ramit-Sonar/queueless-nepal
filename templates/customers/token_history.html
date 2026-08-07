@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% load customer_extras %}
+
+{% block title %}Booking History — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* customers/token_history.html — premium booking history redesign */
+
+    .bh-header { margin-bottom: var(--space-5); animation: bh-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .bh-header p { color: var(--color-text-secondary); margin-top: -8px; font-size: 0.92rem; }
+
+    /* ---------- Stats ---------- */
+    .bh-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+    @media (min-width: 760px) { .bh-stats { grid-template-columns: repeat(5, 1fr); } }
+
+    .bh-stat { animation: bh-fade-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .bh-stats .bh-stat:nth-child(1) { animation-delay: 0.03s; }
+    .bh-stats .bh-stat:nth-child(2) { animation-delay: 0.06s; }
+    .bh-stats .bh-stat:nth-child(3) { animation-delay: 0.09s; }
+    .bh-stats .bh-stat:nth-child(4) { animation-delay: 0.12s; }
+    .bh-stats .bh-stat:nth-child(5) { animation-delay: 0.15s; }
+
+    .bh-stat__icon {
+        width: 38px; height: 38px; border-radius: var(--radius-md);
+        background: rgba(37, 99, 235, 0.1); color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
+        margin-bottom: var(--space-3);
+    }
+    .bh-stat__value { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; }
+    .bh-stat__label { font-size: 0.76rem; color: var(--color-text-secondary); margin-top: 2px; }
+    .bh-stat__caption { font-size: 0.68rem; color: var(--color-text-secondary); opacity: 0.8; margin-top: 4px; }
+
+    /* ---------- Filter bar ---------- */
+    .bh-filter-card { margin-bottom: var(--space-5); animation: bh-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+    .bh-search-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+    .bh-search-row .search-bar { flex: 1; min-width: 220px; margin-bottom: 0; }
+    .bh-search-row select { min-width: 150px; }
+
+    .bh-more-filters summary {
+        list-style: none; cursor: pointer; font-size: 0.84rem; font-weight: 600;
+        color: var(--color-primary); display: flex; align-items: center; gap: 6px;
+        margin-bottom: var(--space-3);
+    }
+    .bh-more-filters summary::-webkit-details-marker { display: none; }
+    .bh-more-filters summary i { transition: transform 0.2s ease; }
+    .bh-more-filters[open] summary i { transform: rotate(180deg); }
+
+    .bh-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+
+    .bh-tabs {
+        display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+        scrollbar-width: thin;
+    }
+
+    .bh-tab {
+        appearance: none; border: 1px solid var(--color-border); background: var(--color-card);
+        color: var(--color-text-secondary); font-size: 0.82rem; font-weight: 600;
+        padding: 8px 16px; border-radius: var(--radius-full); white-space: nowrap; cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bh-tab:hover { transform: translateY(-2px); border-color: rgba(37, 99, 235, 0.35); }
+
+    .bh-tab.is-active {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    .bh-tab .bh-tab-count {
+        display: inline-block; margin-left: 5px; font-size: 0.7rem; opacity: 0.85;
+    }
+
+    /* ---------- Booking cards ---------- */
+    .bh-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+        margin-bottom: var(--space-5);
+    }
+
+    @media (min-width: 720px) { .bh-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1150px) { .bh-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .bh-card {
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        animation: bh-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .bh-grid .bh-card:nth-child(1) { animation-delay: 0.02s; }
+    .bh-grid .bh-card:nth-child(2) { animation-delay: 0.05s; }
+    .bh-grid .bh-card:nth-child(3) { animation-delay: 0.08s; }
+    .bh-grid .bh-card:nth-child(4) { animation-delay: 0.11s; }
+    .bh-grid .bh-card:nth-child(5) { animation-delay: 0.14s; }
+    .bh-grid .bh-card:nth-child(6) { animation-delay: 0.17s; }
+
+    .bh-card-top { display: flex; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-3); }
+
+    .bh-office-icon {
+        width: 40px; height: 40px; border-radius: var(--radius-md);
+        background: rgba(37, 99, 235, 0.1); color: var(--color-primary);
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
+        flex-shrink: 0; overflow: hidden;
+    }
+    .bh-office-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+    .bh-office-name { font-weight: 700; font-size: 0.92rem; }
+    .bh-service-name { font-size: 0.78rem; color: var(--color-text-secondary); margin-top: 1px; }
+
+    .bh-card-number {
+        font-family: var(--font-heading); font-weight: 800; font-size: 1.6rem;
+        color: var(--color-text-primary); margin-bottom: var(--space-2);
+    }
+
+    .bh-card-meta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: 0.76rem; color: var(--color-text-secondary); margin-bottom: var(--space-3); }
+    .bh-card-meta-row span { display: inline-flex; align-items: center; gap: 4px; }
+
+    .badge-waiting.is-live, .badge-called.is-live, .badge-serving.is-live {
+        animation: bh-badge-pulse 1.5s ease-in-out infinite;
+    }
+
+    .bh-card-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+    .bh-card-actions form { flex: 1; min-width: 110px; }
+    .bh-card-actions .btn, .bh-card-actions form .btn { width: 100%; font-size: 0.8rem; padding: 8px 12px; }
+
+    .ripple-effect {
+        position: absolute; border-radius: 50%; background: rgba(37, 99, 235, 0.18);
+        transform: scale(0); animation: bh-ripple 0.6s linear; pointer-events: none;
+    }
+
+    /* ---------- Modal ---------- */
+    .bh-modal-backdrop {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(4px);
+        display: none; align-items: center; justify-content: center;
+        z-index: 200; padding: var(--space-4);
+    }
+    .bh-modal-backdrop.is-open { display: flex; }
+
+    .bh-modal {
+        background: var(--color-card); border-radius: var(--radius-lg);
+        max-width: 440px; width: 100%; max-height: 88vh; overflow-y: auto;
+        padding: var(--space-5);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
+        animation: bh-modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+        position: relative;
+    }
+
+    .bh-modal-close {
+        position: absolute; top: var(--space-3); right: var(--space-3);
+        width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--color-border);
+        background: var(--color-card); cursor: pointer; display: flex; align-items: center; justify-content: center;
+        color: var(--color-text-secondary);
+    }
+
+    .bh-modal-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); padding-right: 36px; }
+    .bh-modal-org { font-weight: 700; font-size: 1rem; }
+
+    .bh-modal-qr { display: block; width: 140px; height: 140px; margin: 0 auto var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 6px; background: #fff; }
+
+    .bh-modal-number {
+        text-align: center; font-family: var(--font-heading); font-weight: 800; font-size: 2rem;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-accent, #38bdf8));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        margin-bottom: var(--space-4);
+    }
+
+    .bh-modal-rows > div { display: flex; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 0.84rem; }
+    .bh-modal-rows > div:last-child { border-bottom: none; }
+    .bh-modal-rows span:first-child { color: var(--color-text-secondary); }
+    .bh-modal-rows strong { text-align: right; font-weight: 600; }
+
+    .bh-modal-live { margin: var(--space-4) 0; padding: var(--space-3); border-radius: var(--radius-md); background: rgba(37, 99, 235, 0.06); }
+    .bh-modal-live-stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; gap: var(--space-2); }
+    .bh-modal-live-stats strong { display: block; font-family: var(--font-heading); font-size: 1.1rem; }
+    .bh-modal-live-stats span { font-size: 0.68rem; color: var(--color-text-secondary); }
+
+    .bh-modal-timeline { margin: var(--space-4) 0; position: relative; padding-left: 22px; }
+    .bh-modal-timeline::before { content: ''; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--color-border); }
+    .bh-timeline-step { position: relative; padding-bottom: var(--space-3); font-size: 0.82rem; }
+    .bh-timeline-step:last-child { padding-bottom: 0; }
+    .bh-timeline-step::before {
+        content: ''; position: absolute; left: -22px; top: 3px; width: 12px; height: 12px; border-radius: 50%;
+        background: var(--color-primary); border: 2px solid var(--color-card);
+    }
+    .bh-timeline-step.is-cancelled::before { background: var(--color-danger); }
+    .bh-timeline-step time { display: block; font-size: 0.72rem; color: var(--color-text-secondary); }
+
+    .bh-modal-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+    .bh-modal-actions .btn { flex: 1; min-width: 130px; font-size: 0.82rem; }
+
+    /* ---------- Empty state ---------- */
+    .bh-empty { animation: bh-fade-up 0.4s ease both; }
+
+    @keyframes bh-fade-down { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bh-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bh-badge-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); } }
+    @keyframes bh-ripple { to { transform: scale(3); opacity: 0; } }
+    @keyframes bh-modal-in { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .badge-waiting.is-live, .badge-called.is-live, .badge-serving.is-live { animation: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bh-header">
+    <h1 class="page-title">Booking History</h1>
+    <p>View, track and manage all your service bookings.</p>
+</div>
+
+<div class="bh-stats">
+    <div class="card bh-stat">
+        <div class="bh-stat__icon"><i class="fa-solid fa-ticket"></i></div>
+        <div class="bh-stat__value" data-counter="{{ stats.total }}">0</div>
+        <div class="bh-stat__label">Total Bookings</div>
+    </div>
+    <div class="card bh-stat">
+        <div class="bh-stat__icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="bh-stat__value" data-counter="{{ stats.active }}">0</div>
+        <div class="bh-stat__label">Active Tokens</div>
+    </div>
+    <div class="card bh-stat">
+        <div class="bh-stat__icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="bh-stat__value" data-counter="{{ stats.completed }}">0</div>
+        <div class="bh-stat__label">Completed Services</div>
+    </div>
+    <div class="card bh-stat">
+        <div class="bh-stat__icon"><i class="fa-solid fa-xmark"></i></div>
+        <div class="bh-stat__value" data-counter="{{ stats.cancelled }}">0</div>
+        <div class="bh-stat__label">Cancelled Tokens</div>
+    </div>
+    <div class="card bh-stat">
+        <div class="bh-stat__icon"><i class="fa-regular fa-clock"></i></div>
+        <div class="bh-stat__value" data-counter="{{ stats.avg_wait_minutes }}">0</div>
+        <div class="bh-stat__label">Avg. Waiting Time (min)</div>
+        <div class="bh-stat__caption">Based on tokens that were called</div>
+    </div>
+</div>
+
+<div class="card bh-filter-card">
+    <form method="get" id="bh-filter-form">
+        <div class="bh-search-row">
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search by token number, office, or department…">
+            </div>
+            <select name="sort" class="form-control" onchange="this.form.submit()">
+                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest first</option>
+                <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+                <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>Recently updated</option>
+            </select>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+        </div>
+
+        <details class="bh-more-filters">
+            <summary><i class="fa-solid fa-chevron-down"></i> More filters</summary>
+            <div class="bh-filter-grid">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Office</label>
+                    <select name="office" class="form-control">
+                        <option value="">All offices</option>
+                        {% for org in booking_offices %}
+                            <option value="{{ org.pk }}" {% if selected_office == org.pk|stringformat:"s" %}selected{% endif %}>{{ org.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">From date</label>
+                    <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">To date</label>
+                    <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-outline">Apply Filters</button>
+            <a href="{% url 'customers:token_history' %}" class="btn btn-outline" style="color: var(--color-danger); border-color: var(--color-danger);">Clear All</a>
+        </details>
+
+        <div class="bh-tabs" style="margin-top: var(--space-4);">
+            <button type="submit" name="status" value="" class="bh-tab {% if not selected_status %}is-active{% endif %}">
+                All <span class="bh-tab-count">({{ total_filtered_count }})</span>
+            </button>
+            {% for value, label in status_choices %}
+                <button type="submit" name="status" value="{{ value }}" class="bh-tab {% if selected_status == value %}is-active{% endif %}">
+                    {{ label }} <span class="bh-tab-count">({{ status_counts|get_item:value }})</span>
+                </button>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+
+{% if tokens %}
+    <div class="bh-grid">
+        {% for token in tokens %}
+            <div class="card bh-card" data-open-modal data-template="token-tpl-{{ token.pk }}">
+                <div class="bh-card-top">
+                    <div class="bh-office-icon">
+                        {% if token.queue.service.organization.logo %}
+                            <img src="{{ token.queue.service.organization.logo.url }}" alt="">
+                        {% else %}
+                            <i class="fa-solid fa-building"></i>
+                        {% endif %}
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="bh-office-name">{{ token.queue.service.organization.name }}</div>
+                        <div class="bh-service-name">{{ token.queue.service.name }}{% if token.queue.service.department %} · {{ token.queue.service.department.name }}{% endif %}</div>
+                    </div>
+                    <span class="badge badge-{{ token.status }} {% if token.is_active_token %}is-live{% endif %}">{{ token.get_status_display }}</span>
+                </div>
+
+                <div class="bh-card-number">{{ token.display_number }}</div>
+
+                <div class="bh-card-meta-row">
+                    <span><i class="fa-regular fa-calendar"></i> {{ token.created_at|date:"M j, Y g:i A" }}</span>
+                    {% if token.is_active_token %}
+                        <span><i class="fa-solid fa-people-line"></i> {{ token.position_in_queue }} ahead</span>
+                        <span><i class="fa-regular fa-clock"></i> {{ token.estimated_wait_minutes }}m wait</span>
+                    {% endif %}
+                </div>
+
+                <div class="bh-card-actions">
+                    <button type="button" class="btn btn-outline" data-open-modal data-template="token-tpl-{{ token.pk }}"><i class="fa-solid fa-eye"></i> View Details</button>
+                    {% if token.is_active_token %}
+                        <form method="post" action="{% url 'customers:cancel_token' pk=token.pk %}" onclick="event.stopPropagation();">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline" style="color: var(--color-danger); border-color: var(--color-danger);">
+                                <i class="fa-solid fa-xmark"></i> Cancel
+                            </button>
+                        </form>
+                    {% elif token.status == 'completed' or token.status == 'cancelled' %}
+                        <form method="post" action="{% url 'customers:rebook_token' pk=token.pk %}" onclick="event.stopPropagation();">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate-right"></i> Book Again</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <template id="token-tpl-{{ token.pk }}">
+                <div class="bh-modal-header">
+                    <div>
+                        <div class="bh-modal-org">{{ token.queue.service.organization.name }}</div>
+                        <div style="font-size:0.78rem; color:var(--color-text-secondary);">{{ token.queue.service.name }}{% if token.queue.service.department %} · {{ token.queue.service.department.name }}{% endif %}</div>
+                    </div>
+                    <span class="badge badge-{{ token.status }}">{{ token.get_status_display }}</span>
+                </div>
+
+                <img class="bh-modal-qr" src="{% url 'customers:token_qr' pk=token.pk %}" alt="QR code for token {{ token.display_number }}">
+                <div class="bh-modal-number">{{ token.display_number }}</div>
+
+                <div class="bh-modal-rows">
+                    <div><span>Booked</span><strong>{{ token.created_at|date:"M j, Y g:i A" }}</strong></div>
+                    <div><span>Reference</span><strong>{{ token.pk|stringformat:"s"|slice:":8"|upper }}</strong></div>
+                    {% if token.queue.service.organization.address %}
+                        <div><span>Address</span><strong>{{ token.queue.service.organization.address }}{% if token.queue.service.organization.city %}, {{ token.queue.service.organization.city }}{% endif %}</strong></div>
+                    {% endif %}
+                </div>
+
+                {% if token.is_active_token %}
+                    <div class="bh-modal-live" data-live data-status-url="{% url 'customers:token_status_json' pk=token.pk %}">
+                        <div class="bh-modal-live-stats">
+                            <div><strong class="bh-live-position">{{ token.position_in_queue }}</strong><span>People ahead</span></div>
+                            <div><strong class="bh-live-eta">{{ token.estimated_wait_minutes }}m</strong><span>Est. wait</span></div>
+                            <div><strong class="bh-live-serving">{{ token.queue.currently_serving.display_number|default:"—" }}</strong><span>Now serving</span></div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="bh-modal-timeline">
+                    <div class="bh-timeline-step"><span>Booking Created</span><time>{{ token.created_at|date:"M j, g:i A" }}</time></div>
+                    {% if token.called_at %}<div class="bh-timeline-step"><span>Called</span><time>{{ token.called_at|date:"M j, g:i A" }}</time></div>{% endif %}
+                    {% if token.started_at %}<div class="bh-timeline-step"><span>Serving Started</span><time>{{ token.started_at|date:"M j, g:i A" }}</time></div>{% endif %}
+                    {% if token.completed_at %}<div class="bh-timeline-step"><span>Completed</span><time>{{ token.completed_at|date:"M j, g:i A" }}</time></div>{% endif %}
+                    {% if token.cancelled_at %}<div class="bh-timeline-step is-cancelled"><span>Cancelled</span><time>{{ token.cancelled_at|date:"M j, g:i A" }}</time></div>{% endif %}
+                </div>
+
+                <div class="bh-modal-actions">
+                    <a href="{% url 'customers:token_detail' pk=token.pk %}" class="btn btn-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Full Page</a>
+                    <a href="{% url 'customers:token_pdf' pk=token.pk %}" class="btn btn-outline"><i class="fa-solid fa-download"></i> Download PDF</a>
+                    {% if token.queue.service.organization.address %}
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ token.queue.service.organization.address|urlencode }}, {{ token.queue.service.organization.city|urlencode }}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-solid fa-diamond-turn-right"></i> Directions</a>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline bh-share-btn" data-share-url="{{ request.scheme }}://{{ request.get_host }}{% url 'customers:token_detail' pk=token.pk %}" data-share-title="Token {{ token.display_number }} — {{ token.queue.service.organization.name }}">
+                        <i class="fa-solid fa-share-nodes"></i> Share
+                    </button>
+                </div>
+            </template>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <div style="display:flex; justify-content:center; gap: var(--space-3); margin-top: var(--space-4);">
+            {% if page_obj.has_previous %}
+                <a href="?status={{ selected_status }}&q={{ search_query }}&office={{ selected_office }}&sort={{ selected_sort }}&date_from={{ date_from }}&date_to={{ date_to }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline">Previous</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a href="?status={{ selected_status }}&q={{ search_query }}&office={{ selected_office }}&sort={{ selected_sort }}&date_from={{ date_from }}&date_to={{ date_to }}&page={{ page_obj.next_page_number }}" class="btn btn-outline">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state card bh-empty">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <p>No booking history found.</p>
+        <a href="{% url 'customers:select_organization' %}" class="btn btn-primary" style="margin-top: var(--space-3); display:inline-flex;">
+            <i class="fa-solid fa-magnifying-glass"></i> Book New Service
+        </a>
+    </div>
+{% endif %}
+
+<div class="bh-modal-backdrop" id="bh-modal-backdrop">
+    <div class="bh-modal" role="dialog" aria-modal="true">
+        <button type="button" class="bh-modal-close" id="bh-modal-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <div id="bh-modal-body"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    // animated stat counters
+    function animateCounter(el) {
+        var target = parseFloat(el.getAttribute('data-counter'));
+        if (isNaN(target)) { return; }
+        var duration = 800;
+        var startTime = null;
+        function step(ts) {
+            if (!startTime) { startTime = ts; }
+            var progress = Math.min((ts - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(target * eased);
+            if (progress < 1) { requestAnimationFrame(step); }
+        }
+        requestAnimationFrame(step);
+    }
+    if ('IntersectionObserver' in window) {
+        var counterObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    animateCounter(entry.target);
+                    counterObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.4 });
+        document.querySelectorAll('[data-counter]').forEach(function (el) { counterObserver.observe(el); });
+    } else {
+        document.querySelectorAll('[data-counter]').forEach(function (el) { el.textContent = el.getAttribute('data-counter'); });
+    }
+
+    // ripple effect, scoped to this page's cards + tabs only
+    function addRipple(e) {
+        var target = e.currentTarget;
+        var rect = target.getBoundingClientRect();
+        var diameter = Math.max(rect.width, rect.height);
+        var circle = document.createElement('span');
+        circle.className = 'ripple-effect';
+        circle.style.width = circle.style.height = diameter + 'px';
+        circle.style.left = (e.clientX - rect.left - diameter / 2) + 'px';
+        circle.style.top = (e.clientY - rect.top - diameter / 2) + 'px';
+        var existing = target.querySelector('.ripple-effect');
+        if (existing) { existing.remove(); }
+        target.appendChild(circle);
+        setTimeout(function () { circle.remove(); }, 600);
+    }
+    document.querySelectorAll('.bh-card, .bh-tab').forEach(function (el) {
+        el.addEventListener('click', addRipple);
+    });
+
+    // booking detail modal
+    var backdrop = document.getElementById('bh-modal-backdrop');
+    var modalBody = document.getElementById('bh-modal-body');
+    var closeBtn = document.getElementById('bh-modal-close');
+    var pollTimer = null;
+
+    function stopPolling() {
+        if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    }
+
+    function startPolling(liveEl) {
+        var statusUrl = liveEl.getAttribute('data-status-url');
+        var posEl = liveEl.querySelector('.bh-live-position');
+        var etaEl = liveEl.querySelector('.bh-live-eta');
+        var servingEl = liveEl.querySelector('.bh-live-serving');
+
+        function poll() {
+            fetch(statusUrl)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (posEl) { posEl.textContent = data.position_in_queue; }
+                    if (etaEl) { etaEl.textContent = data.estimated_wait_minutes + 'm'; }
+                    if (servingEl) { servingEl.textContent = data.currently_serving || '—'; }
+                    pollTimer = setTimeout(poll, 8000);
+                })
+                .catch(function () { pollTimer = setTimeout(poll, 8000); });
+        }
+        pollTimer = setTimeout(poll, 8000);
+    }
+
+    function openModal(templateId) {
+        var tpl = document.getElementById(templateId);
+        if (!tpl) { return; }
+        modalBody.innerHTML = '';
+        modalBody.appendChild(tpl.content.cloneNode(true));
+        backdrop.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+
+        var liveEl = modalBody.querySelector('[data-live]');
+        if (liveEl) { startPolling(liveEl); }
+
+        var shareBtn = modalBody.querySelector('.bh-share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function () {
+                var url = shareBtn.getAttribute('data-share-url');
+                var title = shareBtn.getAttribute('data-share-title');
+                if (navigator.share) {
+                    navigator.share({ title: title, url: url }).catch(function () {});
+                } else if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(function () {
+                        shareBtn.innerHTML = '<i class="fa-solid fa-check"></i> Link copied';
+                        setTimeout(function () { shareBtn.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share'; }, 1800);
+                    });
+                }
+            });
+        }
+    }
+
+    function closeModal() {
+        backdrop.classList.remove('is-open');
+        document.body.style.overflow = '';
+        stopPolling();
+    }
+
+    document.querySelectorAll('[data-open-modal]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openModal(el.getAttribute('data-template'));
+        });
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', function (e) {
+        if (e.target === backdrop) { closeModal(); }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && backdrop.classList.contains('is-open')) { closeModal(); }
+    });
+})();
+</script>
+{% endblock %}

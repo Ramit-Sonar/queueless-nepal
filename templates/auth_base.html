@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}QueueLess Nepal{% endblock %}</title>
+    {% include "partials/head_assets.html" %}
+    <style>
+        /* ==========================================================
+           QueueLess Nepal — Liquid Glass Professional Theme (Auth)
+           ========================================================== */
+
+        h1, h2, h3, .auth-card__brand, .btn, .badge {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .auth-card .card {
+            background: rgba(255, 255, 255, 0.72) !important;
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            box-shadow:
+                0 1px 2px rgba(15, 23, 42, 0.04),
+                0 10px 24px rgba(15, 23, 42, 0.08),
+                0 30px 60px rgba(15, 23, 42, 0.10),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+        }
+
+        [data-theme="dark"] .auth-card .card {
+            background: rgba(17, 24, 39, 0.7) !important;
+            box-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.3),
+                0 10px 24px rgba(0, 0, 0, 0.4),
+                0 30px 60px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+        }
+
+        .btn {
+            font-weight: 600;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(37, 99, 235, 0.45);
+        }
+
+        .auth-particle {
+            position: absolute;
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+            animation: authParticleFloat 9s ease-in-out infinite;
+        }
+
+        @keyframes authParticleFloat {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.15; }
+            50% { transform: translateY(-36px) translateX(12px); opacity: 0.5; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="auth-shell">
+        <span class="auth-particle" style="top:18%; left:12%;"></span>
+        <span class="auth-particle" style="top:70%; left:85%; animation-delay:-3s;"></span>
+        <span class="auth-particle" style="top:35%; left:78%; animation-delay:-5.5s;"></span>
+        <span class="auth-particle" style="top:82%; left:22%; animation-delay:-1.5s;"></span>
+        <div class="auth-card {% block auth_card_class %}{% endblock %}">
+            <div class="auth-card__brand">
+                <img src="{% static 'img/logo.png' %}" alt="QueueLess Nepal" class="auth-card__brand-icon">
+                <span>QueueLess Nepal</span>
+            </div>
+            <div class="card">
+                {% include "partials/messages.html" %}
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

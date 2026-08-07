@@ -1,0 +1,49 @@
+<style>
+    /* bottom_nav_orgadmin.html — internal liquid-glass polish */
+    nav.bottom-nav {
+        animation: bno-slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    nav.bottom-nav .bottom-nav__item i {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    nav.bottom-nav .bottom-nav__item.is-active i {
+        transform: translateY(-2px) scale(1.12);
+    }
+
+    nav.bottom-nav .bottom-nav__item:active {
+        transform: scale(0.94);
+    }
+
+    @keyframes bno-slide-up {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        nav.bottom-nav { animation: none; }
+    }
+</style>
+<nav class="bottom-nav">
+    <a href="{% url 'organizations:dashboard' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="{% url 'organizations:queues' %}" class="bottom-nav__item {% if 'queue' in request.resolver_match.url_name %}is-active{% endif %}">
+        <i class="fa-solid fa-people-line"></i>
+        <span>Queues</span>
+    </a>
+    <a href="{% url 'organizations:staff_list' %}" class="bottom-nav__item {% if 'staff' in request.resolver_match.url_name %}is-active{% endif %}">
+        <i class="fa-solid fa-id-badge"></i>
+        <span>Staff</span>
+    </a>
+    <a href="{% url 'organizations:reports' %}" class="bottom-nav__item {% if request.resolver_match.url_name == 'reports' %}is-active{% endif %}">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Reports</span>
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="bottom-nav__item {% if request.resolver_match.view_name == 'accounts:profile' %}is-active{% endif %}">
+        <i class="fa-solid fa-user"></i>
+        <span>Account</span>
+    </a>
+</nav>

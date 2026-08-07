@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Staff — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* staff_list.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: stl-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .list-item {
+        animation: stl-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .list-item:nth-child(1) { animation-delay: 0.03s; }
+    .list-item:nth-child(2) { animation-delay: 0.07s; }
+    .list-item:nth-child(3) { animation-delay: 0.11s; }
+    .list-item:nth-child(4) { animation-delay: 0.15s; }
+    .list-item:nth-child(5) { animation-delay: 0.19s; }
+
+    .icon-btn {
+        transition: transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
+
+    @keyframes stl-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes stl-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Staff</h1>
+    <a href="{% url 'organizations:staff_add' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Staff</a>
+</div>
+
+{% if staff_members %}
+    {% for staff in staff_members %}
+        <div class="list-item">
+            <div class="list-item__icon"><i class="fa-solid fa-id-badge"></i></div>
+            <div class="list-item__body">
+                <div class="list-item__title">{{ staff.user.get_full_name|default:staff.user.username }}</div>
+                <div class="list-item__meta">
+                    {% if staff.department %}<span>{{ staff.department.name }}</span>{% endif %}
+                    {% if staff.counter_number %}<span>Counter {{ staff.counter_number }}</span>{% endif %}
+                    <span class="badge badge-{% if staff.is_active %}completed{% else %}cancelled{% endif %}">
+                        {% if staff.is_active %}Active{% else %}Removed{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="row-actions">
+                <a href="{% url 'organizations:staff_edit' pk=staff.pk %}" class="icon-btn"><i class="fa-solid fa-pen"></i></a>
+                {% if staff.is_active %}
+                    <form method="post" action="{% url 'organizations:staff_remove' pk=staff.pk %}" onsubmit="return confirm('Remove this staff member? They will no longer be able to log in.');">
+                        {% csrf_token %}
+                        <button type="submit" class="icon-btn icon-btn-danger"><i class="fa-solid fa-user-slash"></i></button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state card">
+        <i class="fa-solid fa-id-badge"></i>
+        <p>No staff members yet.</p>
+        <a href="{% url 'organizations:staff_add' %}" class="btn btn-primary" style="margin-top: var(--space-3); display:inline-flex;">
+            <i class="fa-solid fa-plus"></i> Add your first staff member
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

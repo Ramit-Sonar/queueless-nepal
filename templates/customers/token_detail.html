@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ token.display_number }} — QueueLess Nepal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* token_detail.html — page-specific liquid-glass polish */
+    .ticket {
+        animation: ticket-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .ticket__number {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: ticket-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    #status-badge.badge-called,
+    #status-badge.badge-waiting {
+        animation: ticket-badge-pulse 1.5s ease-in-out infinite;
+    }
+
+    .ticket__stat {
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+        animation: ticket-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .ticket__stats .ticket__stat:nth-child(1) { animation-delay: 0.15s; }
+    .ticket__stats .ticket__stat:nth-child(2) { animation-delay: 0.2s; }
+    .ticket__stats .ticket__stat:nth-child(3) { animation-delay: 0.25s; }
+
+    .ticket__stat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    }
+
+    #action-buttons {
+        animation: ticket-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    }
+
+    @keyframes ticket-fade-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes ticket-pop {
+        from { opacity: 0; transform: scale(0.85); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes ticket-badge-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #status-badge.badge-called, #status-badge.badge-waiting { animation: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card ticket" style="max-width: 480px; margin: 0 auto;">
+    <span id="status-badge" class="badge badge-{{ token.status }}">{{ token.get_status_display }}</span>
+    <div class="ticket__number">{{ token.display_number }}</div>
+    <p style="color: var(--color-text-secondary);">{{ token.queue.service.name }} — {{ token.queue.service.organization.name }}</p>
+
+    <div class="ticket__stats">
+        <div class="ticket__stat">
+            <div class="ticket__stat-value" id="position-value">{{ token.position_in_queue }}</div>
+            <div class="ticket__stat-label">People ahead</div>
+        </div>
+        <div class="ticket__stat">
+            <div class="ticket__stat-value" id="eta-value">{{ token.estimated_wait_minutes }}m</div>
+            <div class="ticket__stat-label">Est. wait</div>
+        </div>
+        <div class="ticket__stat">
+            <div class="ticket__stat-value" id="serving-value">{{ token.queue.currently_serving.display_number|default:"—" }}</div>
+            <div class="ticket__stat-label">Now serving</div>
+        </div>
+    </div>
+
+    <div style="margin-top: var(--space-6); display:flex; gap: var(--space-3);" id="action-buttons">
+        {% if token.status in token.ACTIVE_STATUSES %}
+            <form method="post" action="{% url 'customers:cancel_token' pk=token.pk %}" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline btn-block" style="color: var(--color-danger); border-color: var(--color-danger);">
+                    Cancel Token
+                </button>
+            </form>
+        {% elif token.status == 'completed' or token.status == 'cancelled' %}
+            <form method="post" action="{% url 'customers:rebook_token' pk=token.pk %}" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-block">Book Again</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if token.status in token.ACTIVE_STATUSES %}
+<script>
+(function () {
+    const statusUrl = "{% url 'customers:token_status_json' pk=token.pk %}";
+    const badge = document.getElementById('status-badge');
+    const positionEl = document.getElementById('position-value');
+    const etaEl = document.getElementById('eta-value');
+    const servingEl = document.getElementById('serving-value');
+
+    function poll() {
+        fetch(statusUrl)
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                positionEl.textContent = data.position_in_queue;
+                etaEl.textContent = data.estimated_wait_minutes + 'm';
+                servingEl.textContent = data.currently_serving || '—';
+                if (badge.textContent.trim() !== data.status_display) {
+                    badge.textContent = data.status_display;
+                    badge.className = 'badge badge-' + data.status;
+                }
+                if (!['waiting', 'called', 'serving'].includes(data.status)) {
+                    window.location.reload();
+                    return;
+                }
+                setTimeout(poll, 8000);
+            })
+            .catch(function () {
+                setTimeout(poll, 8000);
+            });
+    }
+
+    setTimeout(poll, 8000);
+})();
+</script>
+{% endif %}
+{% endblock %}

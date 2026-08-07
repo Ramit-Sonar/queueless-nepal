@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — {{ organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* reports.html — page-specific liquid-glass polish */
+    .page-header-row {
+        animation: rp-fade-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .chip.is-active {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-outline:hover {
+        transform: translateY(-2px);
+    }
+
+    .table-wrap {
+        animation: rp-fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    table.data-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    table.data-table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    @keyframes rp-fade-down {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes rp-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+    <h1 class="page-title" style="margin:0;">Reports</h1>
+    <a href="{% url 'organizations:reports_pdf' %}?period={{ period }}{% if period == 'custom' %}&start={{ start }}&end={{ end }}{% endif %}" class="btn btn-outline">
+        <i class="fa-solid fa-file-pdf"></i> Export PDF
+    </a>
+</div>
+
+<div class="chip-row">
+    <a href="?period=today" class="chip {% if period == 'today' %}is-active{% endif %}">Daily</a>
+    <a href="?period=week" class="chip {% if period == 'week' %}is-active{% endif %}">This Week</a>
+    <a href="?period=month" class="chip {% if period == 'month' %}is-active{% endif %}">Monthly</a>
+</div>
+
+<form method="get" class="card" style="display:flex; gap: var(--space-3); align-items:flex-end; flex-wrap:wrap; margin-bottom: var(--space-5);">
+    <input type="hidden" name="period" value="custom">
+    <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">From</label>
+        <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">To</label>
+        <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-outline">Custom Range</button>
+</form>
+
+<p style="color: var(--color-text-secondary); font-size:0.85rem; margin-bottom: var(--space-4);">
+    Showing {{ start }} to {{ end }}
+</p>
+
+<div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-card__value">{{ summary.total }}</div><div class="kpi-card__label">Total tokens</div></div>
+    <div class="kpi-card"><div class="kpi-card__value">{{ summary.completed }}</div><div class="kpi-card__label">Completed</div></div>
+    <div class="kpi-card"><div class="kpi-card__value">{{ summary.cancelled }}</div><div class="kpi-card__label">Cancelled</div></div>
+    <div class="kpi-card"><div class="kpi-card__value">{{ summary.no_show }}</div><div class="kpi-card__label">No show</div></div>
+    <div class="kpi-card"><div class="kpi-card__value">{{ summary.avg_wait_minutes }}m</div><div class="kpi-card__label">Avg. wait</div></div>
+</div>
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Queue Statistics by Service</h2>
+{% if service_breakdown %}
+    <div class="table-wrap" style="margin-bottom: var(--space-5);">
+        <table class="data-table">
+            <thead><tr><th>Service</th><th>Total</th><th>Completed</th><th>Cancelled</th></tr></thead>
+            <tbody>
+                {% for row in service_breakdown %}
+                    <tr>
+                        <td>{{ row.queue__service__name }}</td>
+                        <td>{{ row.total }}</td>
+                        <td>{{ row.completed }}</td>
+                        <td>{{ row.cancelled }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card" style="margin-bottom: var(--space-5);"><i class="fa-solid fa-chart-line"></i><p>No data for this period.</p></div>
+{% endif %}
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Staff Performance</h2>
+{% if staff_performance %}
+    <div class="table-wrap" style="margin-bottom: var(--space-5);">
+        <table class="data-table">
+            <thead><tr><th>Staff</th><th>Tokens completed</th></tr></thead>
+            <tbody>
+                {% for row in staff_performance %}
+                    <tr>
+                        <td>{{ row.served_by__first_name }} {{ row.served_by__last_name|default:row.served_by__username }}</td>
+                        <td>{{ row.completed_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card" style="margin-bottom: var(--space-5);"><i class="fa-solid fa-id-badge"></i><p>No staff activity recorded for this period yet.</p></div>
+{% endif %}
+
+<h2 style="font-size:1rem; margin-bottom: var(--space-3);">Top Customers</h2>
+{% if top_customers %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Customer</th><th>Visits</th></tr></thead>
+            <tbody>
+                {% for row in top_customers %}
+                    <tr>
+                        <td>{{ row.customer__first_name }} {{ row.customer__last_name|default:row.customer__username }}</td>
+                        <td>{{ row.visit_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state card"><i class="fa-solid fa-users"></i><p>No customer visits recorded for this period yet.</p></div>
+{% endif %}
+{% endblock %}
